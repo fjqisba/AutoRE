@@ -1,7 +1,7 @@
 interface:
   display_name: "Unity IL2CPP 分析"
-  short_description: "使用 Il2CppDumper 恢复类型与方法地址，关联角色、皮肤和动画资源"
-  default_prompt: "使用 $unity-il2cpp-analysis 分析目标 Unity 程序，恢复相关类型与资源引用，并结合 IDA 核对关键代码行为。"
+  short_description: "用 Il2CppDumper 恢复类型与地址，关联角色、皮肤、动画资源"
+  default_prompt: "使用 $unity-il2cpp-analysis 分析目标 Unity 程序，恢复类型与资源引用，并用 ida-decomp 核对关键代码。"
 
 policy:
   allow_implicit_invocation: true
