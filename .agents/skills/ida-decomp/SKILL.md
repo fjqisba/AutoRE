@@ -5,6 +5,24 @@ description: 通过IDA Pro MCP 分析已打开的 ELF、SO、PE 或固件数据�
 
 # IDA Pro MCP
 
+## MCP 未连接时
+
+工具不可见、调用报连接失败，即 MCP 未启动。开关：`tools/ida-mcp/Start-IdaMcp.ps1`（相对项目根）。
+
+必须开可见窗口启动，让用户看到服务在跑；禁止在后台作业里静默启动：
+
+```powershell
+$launcher = '<项目根>\tools\ida-mcp\Start-IdaMcp.ps1'
+Start-Process powershell.exe -WindowStyle Normal -WorkingDirectory '<项目根>' -ArgumentList @(
+    '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-NoExit', '-File', $launcher,
+    '-Port', '8737'   # 可选：-Database <文件>；-OpenIda -Database <文件>；-Port 换端口
+)
+```
+
+- 窗口标题 `IDA MCP 127.0.0.1:8737`，关闭即停止；服务已在运行时重复启动会握手识别后退出，可安全重试。
+- 启动后轮询端口并再次 `list_databases` 确认，成功再继续分析。
+- 起不来就转述窗口里的原始错误，不要绕过 MCP。
+
 ## 标准打开和绑定流程
 
 1. **发现数据库**：调用 `mcp__ida_pro_mcp__list_databases({})`，记录每项的 `path`、`backend`、`status` 和 `instance_id`。
@@ -13,7 +31,7 @@ description: 通过IDA Pro MCP 分析已打开的 ELF、SO、PE 或固件数据�
 4. **确认地址语义**：将崩溃栈中的 `pc` 减去模块加载基址得到模块 RVA；如果栈已经给出 `libfoo.so + 0x1234`，直接使用该 RVA，不要把文件偏移、虚拟地址和运行时 PC 混用。
 5. **结束会话**：仅在不再需要该实例时调用 `close_database(instance_id=...)` 释放本次 MCP 租约。它不应关闭用户 GUI 中仍打开的数据库；不要为了“清理”而关闭不属于当前分析的实例。
 
-如果 `list_databases` 没有目标库：
+若 MCP 正常但 `list_databases` 无目标库（先排除上节未启动）：
 
 - 不要在本机搜索、复制或调用 `open_database` 伪造远程状态。
 - 告知用户需要在远程 IDA GUI/工作器打开数据库，或请用户提供远程主机可访问的确切路径后再继续。
