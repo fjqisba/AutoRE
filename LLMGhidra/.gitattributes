@@ -1,0 +1,14 @@
+# 编译后的处理器语言和原生协议样本必须逐字节保存，禁止换行转换。
+*.sla binary
+*.packed binary
+
+# 导入资产的 SHA-256 清单以原始字节为准，Windows checkout 也不转换换行。
+native/decompiler/** -text
+resources/processor-pack/** -text
+src/pcode-ir/tests/fixtures/** -text
+docs/reference/*.md -text
+docs/design/ARM64_AUTO_INDEX_DESIGN.md -text
+LICENSE -text
+NOTICE -text
+UPSTREAM_COMMIT -text
+licenses/zlib_License.txt -text

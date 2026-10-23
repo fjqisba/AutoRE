@@ -1,0 +1,1423 @@
+{
+  "source_root": "LLMGhidra1",
+  "snapshot_date": "2026-10-23",
+  "note": "Imported byte-for-byte. native/cmake/NativeSources.cmake is subsequently adapted; its hash records the imported source.",
+  "files": [
+    {
+      "source": "headless/core/decompiler/cpp/action.cc",
+      "destination": "native/decompiler/cpp/action.cc",
+      "sha256": "7fc1745d470766a8e1d77d5a5c83eed895e242014879a25feeef27f38b2a8e30",
+      "bytes": 31155
+    },
+    {
+      "source": "headless/core/decompiler/cpp/action.hh",
+      "destination": "native/decompiler/cpp/action.hh",
+      "sha256": "30a4b0223f32b5a04a084bce8d1632098926065708c91638022637140a0e5624",
+      "bytes": 18028
+    },
+    {
+      "source": "headless/core/decompiler/cpp/address.cc",
+      "destination": "native/decompiler/cpp/address.cc",
+      "sha256": "79534a8bb9c41bce77d94c3e6d5f181e2ac1b6779763bf99ea2db40fa00f2b47",
+      "bytes": 31793
+    },
+    {
+      "source": "headless/core/decompiler/cpp/address.hh",
+      "destination": "native/decompiler/cpp/address.hh",
+      "sha256": "71c477ee1c1d87802c2753cdd8a1fd6da446d1e489635893d1fe3787c32b3f05",
+      "bytes": 28087
+    },
+    {
+      "source": "headless/core/decompiler/cpp/analyzesigs.hh",
+      "destination": "native/decompiler/cpp/analyzesigs.hh",
+      "sha256": "aadc200dd1352e358b9d36f6b16e2c1b407d836bf94f24c771f2ae75890ded11",
+      "bytes": 2266
+    },
+    {
+      "source": "headless/core/decompiler/cpp/architecture.cc",
+      "destination": "native/decompiler/cpp/architecture.cc",
+      "sha256": "2957a7316ae5f962cca53ed3f2a59a536cf2dc68f10f1192dee188f5b6946486",
+      "bytes": 54965
+    },
+    {
+      "source": "headless/core/decompiler/cpp/architecture.hh",
+      "destination": "native/decompiler/cpp/architecture.hh",
+      "sha256": "e89059192a5923020fbbd05178b2290670326da12f167875aefdbedb49bd0fca",
+      "bytes": 23481
+    },
+    {
+      "source": "headless/core/decompiler/cpp/bfd_arch.hh",
+      "destination": "native/decompiler/cpp/bfd_arch.hh",
+      "sha256": "7f0d0077225b535fdcce209ee27c7dcb8144be8e9970148caa9fd62271ea6163",
+      "bytes": 2287
+    },
+    {
+      "source": "headless/core/decompiler/cpp/bitfield.cc",
+      "destination": "native/decompiler/cpp/bitfield.cc",
+      "sha256": "d8b05838cdc39acc6dff17c60b97d0ae7149b96d3fd0e074ea44a08f5b7548c9",
+      "bytes": 85513
+    },
+    {
+      "source": "headless/core/decompiler/cpp/bitfield.hh",
+      "destination": "native/decompiler/cpp/bitfield.hh",
+      "sha256": "975f71e61bb3f8779c842cd1755de4db19f54e0a9e6c58f5e39cbbc48e853f23",
+      "bytes": 16654
+    },
+    {
+      "source": "headless/core/decompiler/cpp/block.cc",
+      "destination": "native/decompiler/cpp/block.cc",
+      "sha256": "40b0a8058568481807f030809c9c9c0e4d484362017ad9c329e4a6ff728317a9",
+      "bytes": 113624
+    },
+    {
+      "source": "headless/core/decompiler/cpp/block.hh",
+      "destination": "native/decompiler/cpp/block.hh",
+      "sha256": "b93e8524e775cb988667c860235664802332f7f97c2555793b89141a04113b38",
+      "bytes": 55756
+    },
+    {
+      "source": "headless/core/decompiler/cpp/blockaction.cc",
+      "destination": "native/decompiler/cpp/blockaction.cc",
+      "sha256": "501e8d9a3caec9172b1fdfa421f6cbc96cf8eb481fa3b40acbd186db4bab9dd6",
+      "bytes": 78396
+    },
+    {
+      "source": "headless/core/decompiler/cpp/blockaction.hh",
+      "destination": "native/decompiler/cpp/blockaction.hh",
+      "sha256": "3993011793101ed3e4cadb6cc31ef1a88daea34d86d454984dc885c6fe62460d",
+      "bytes": 21070
+    },
+    {
+      "source": "headless/core/decompiler/cpp/callgraph.hh",
+      "destination": "native/decompiler/cpp/callgraph.hh",
+      "sha256": "efd8791dcdf7b000f416475881cb6f5056c79073a8e68cf90654bc727bebbeb8",
+      "bytes": 4495
+    },
+    {
+      "source": "headless/core/decompiler/cpp/capability.cc",
+      "destination": "native/decompiler/cpp/capability.cc",
+      "sha256": "16e88a09e3093841c9aaadc2c09e07d9deff757cf7f18d969d3fea13a2eedcdc",
+      "bytes": 1619
+    },
+    {
+      "source": "headless/core/decompiler/cpp/capability.hh",
+      "destination": "native/decompiler/cpp/capability.hh",
+      "sha256": "fa96b7a3482bd4c72bf30990945356f1da4d7876de33f20f8b699be95bf04c78",
+      "bytes": 2059
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cast.cc",
+      "destination": "native/decompiler/cpp/cast.cc",
+      "sha256": "48cb0d500cf66bb22a73460c62ff923aa19fbc146ec1ef528c797a555709cca8",
+      "bytes": 20378
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cast.hh",
+      "destination": "native/decompiler/cpp/cast.hh",
+      "sha256": "b41c4f045c66a5fe0c51550b536e162bc0c4799b86153f7e587fccce88b58c1c",
+      "bytes": 10722
+    },
+    {
+      "source": "headless/core/decompiler/cpp/codedata.hh",
+      "destination": "native/decompiler/cpp/codedata.hh",
+      "sha256": "94eb00dd06b74bc1f1b01abffaac20680376ec12b538ceb3c07a2fdc435cc766",
+      "bytes": 6056
+    },
+    {
+      "source": "headless/core/decompiler/cpp/comment.cc",
+      "destination": "native/decompiler/cpp/comment.cc",
+      "sha256": "5983ec37f7048cdb30d0ddef9cb4ff74fce35d887d3a75be4c852f70dd4fafcb",
+      "bytes": 12603
+    },
+    {
+      "source": "headless/core/decompiler/cpp/comment.hh",
+      "destination": "native/decompiler/cpp/comment.hh",
+      "sha256": "b92289d112351984597ff679fe35ba8d0df8e026bce09209facf3e39a8f50816",
+      "bytes": 11932
+    },
+    {
+      "source": "headless/core/decompiler/cpp/compression.cc",
+      "destination": "native/decompiler/cpp/compression.cc",
+      "sha256": "654bf55f981c97347e83422fc3c387632b94d42f2185d5da6f5bc03bdc6c4027",
+      "bytes": 4589
+    },
+    {
+      "source": "headless/core/decompiler/cpp/compression.hh",
+      "destination": "native/decompiler/cpp/compression.hh",
+      "sha256": "1c16a6e3b396a9d89e7a14b249c158055ae2806bcafdd80574f31bdb66b92bef",
+      "bytes": 4062
+    },
+    {
+      "source": "headless/core/decompiler/cpp/condexe.cc",
+      "destination": "native/decompiler/cpp/condexe.cc",
+      "sha256": "f0becded8de50d4a30b59863f0590ba9d9020ce66125ece924c895622e2fb434",
+      "bytes": 24825
+    },
+    {
+      "source": "headless/core/decompiler/cpp/condexe.hh",
+      "destination": "native/decompiler/cpp/condexe.hh",
+      "sha256": "013bc602406da2e5ab1cada108a4e452bec5e3b96b0fcd5907abaf008c49c086",
+      "bytes": 9719
+    },
+    {
+      "source": "headless/core/decompiler/cpp/constseq.cc",
+      "destination": "native/decompiler/cpp/constseq.cc",
+      "sha256": "22f3bc253bad9977f04b559ed75cab2e476e8fcca144301f830e4869f9e7ab38",
+      "bytes": 39373
+    },
+    {
+      "source": "headless/core/decompiler/cpp/constseq.hh",
+      "destination": "native/decompiler/cpp/constseq.hh",
+      "sha256": "d70b8fd9e5ad0252d908b0d16b62144046abcf97aff8fa737afd314723b6bfdc",
+      "bytes": 8085
+    },
+    {
+      "source": "headless/core/decompiler/cpp/context.cc",
+      "destination": "native/decompiler/cpp/context.cc",
+      "sha256": "f2652596e95bf5609cc07192e2e9ef554d7fec81ac915d632626b0a093954f1a",
+      "bytes": 7688
+    },
+    {
+      "source": "headless/core/decompiler/cpp/context.hh",
+      "destination": "native/decompiler/cpp/context.hh",
+      "sha256": "9e37652bf97d2e546e297b7ae936d867e392de5f7604ab9622d71297f83db7da",
+      "bytes": 9622
+    },
+    {
+      "source": "headless/core/decompiler/cpp/coreaction.cc",
+      "destination": "native/decompiler/cpp/coreaction.cc",
+      "sha256": "fe71d656fbf919dc96cbbc58c966ee3fda6b58c942c6dabbb9f219bfb80065fa",
+      "bytes": 206210
+    },
+    {
+      "source": "headless/core/decompiler/cpp/coreaction.hh",
+      "destination": "native/decompiler/cpp/coreaction.hh",
+      "sha256": "c44e1f2ef5cdbcb8cfc04a78be757e73be86224783e5bea8086e89c48e3ea725",
+      "bytes": 52150
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cover.cc",
+      "destination": "native/decompiler/cpp/cover.cc",
+      "sha256": "65cc1e19e6019e8a36ef0ffe8bf4db765344c7e9dcb9033d05e673abf5d32cd7",
+      "bytes": 18541
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cover.hh",
+      "destination": "native/decompiler/cpp/cover.hh",
+      "sha256": "d6e59bd9d57ae2a87a3c2e9e8ee2a2ab93c889c39704a7b446a512d43fcbc2ca",
+      "bytes": 7598
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cpool.cc",
+      "destination": "native/decompiler/cpp/cpool.cc",
+      "sha256": "014f9da222d82a2d9a6d17dde4415cf0bdb792c2c8bc848487d03560e0348519",
+      "bytes": 8651
+    },
+    {
+      "source": "headless/core/decompiler/cpp/cpool.hh",
+      "destination": "native/decompiler/cpp/cpool.hh",
+      "sha256": "ee363129c837300525a840f4f067b68fe7da000f6ac2c12c4ddda31ef18675b7",
+      "bytes": 11623
+    },
+    {
+      "source": "headless/core/decompiler/cpp/crc32.cc",
+      "destination": "native/decompiler/cpp/crc32.cc",
+      "sha256": "bff77ec2beb5a294a1769ea12fdf270f6bf56ca68bb96e0a31e1826eebe5066e",
+      "bytes": 3694
+    },
+    {
+      "source": "headless/core/decompiler/cpp/crc32.hh",
+      "destination": "native/decompiler/cpp/crc32.hh",
+      "sha256": "0dbfe90e29471e2f7b5989870ca9329345a3466620ff5dba2908cc99cf548aae",
+      "bytes": 1173
+    },
+    {
+      "source": "headless/core/decompiler/cpp/database.cc",
+      "destination": "native/decompiler/cpp/database.cc",
+      "sha256": "4f2be098dde9dcb75cb3e76bf8a2bf601d0725a14bc13e4983d736417abb8cec",
+      "bytes": 113399
+    },
+    {
+      "source": "headless/core/decompiler/cpp/database.hh",
+      "destination": "native/decompiler/cpp/database.hh",
+      "sha256": "79e06ec7a72c86711ca65a074ed2604768e8532e9261a5ea8795ff77f081bfc9",
+      "bytes": 55662
+    },
+    {
+      "source": "headless/core/decompiler/cpp/doccore.hh",
+      "destination": "native/decompiler/cpp/doccore.hh",
+      "sha256": "10acdc34a8f85ccb3d15b05a6c4a082a52d8b0813e2b04c34f6531d8cfe1c73a",
+      "bytes": 13629
+    },
+    {
+      "source": "headless/core/decompiler/cpp/docmain.hh",
+      "destination": "native/decompiler/cpp/docmain.hh",
+      "sha256": "5772f4cfd551ea592b5cb12af93b1ea356c6abc477ea987e67e1e0bc87855aec",
+      "bytes": 17854
+    },
+    {
+      "source": "headless/core/decompiler/cpp/double.cc",
+      "destination": "native/decompiler/cpp/double.cc",
+      "sha256": "7ba047a84d1245350efcb482a4833fe79fcc16357f5e57b818ead2559efb4bc1",
+      "bytes": 121079
+    },
+    {
+      "source": "headless/core/decompiler/cpp/double.hh",
+      "destination": "native/decompiler/cpp/double.hh",
+      "sha256": "806bda1f49a6a1e25174874cafa4248a7b0272bf4c5e2715b12cfdb96336d79e",
+      "bytes": 16286
+    },
+    {
+      "source": "headless/core/decompiler/cpp/dynamic.cc",
+      "destination": "native/decompiler/cpp/dynamic.cc",
+      "sha256": "740772b620e5383045819ecc0381395014505a4af6c4125657eed32ffc5ba0a7",
+      "bytes": 23525
+    },
+    {
+      "source": "headless/core/decompiler/cpp/dynamic.hh",
+      "destination": "native/decompiler/cpp/dynamic.hh",
+      "sha256": "4ee1f995d65f4834cac34b66782a3858e269e1e7ef5a3d9fb38d1648c74757d9",
+      "bytes": 6561
+    },
+    {
+      "source": "headless/core/decompiler/cpp/emulate.cc",
+      "destination": "native/decompiler/cpp/emulate.cc",
+      "sha256": "626a556e976077f6bd3baf1bf960328e5af071aa01a894518a9cfd63f6132d0f",
+      "bytes": 13424
+    },
+    {
+      "source": "headless/core/decompiler/cpp/emulate.hh",
+      "destination": "native/decompiler/cpp/emulate.hh",
+      "sha256": "e6f3ac097a7d67b0eae1b2567536b4994e5dcec3ec91ed61b5bb31686e86c50a",
+      "bytes": 26056
+    },
+    {
+      "source": "headless/core/decompiler/cpp/emulateutil.cc",
+      "destination": "native/decompiler/cpp/emulateutil.cc",
+      "sha256": "7bfaa738314b41e0da21127cc65ca9938bf2511499327286ef2fa442916507d7",
+      "bytes": 11893
+    },
+    {
+      "source": "headless/core/decompiler/cpp/emulateutil.hh",
+      "destination": "native/decompiler/cpp/emulateutil.hh",
+      "sha256": "d7de7ee991118289f4001edde10c221164369b2c1698159abddb8a6258d88160",
+      "bytes": 8361
+    },
+    {
+      "source": "headless/core/decompiler/cpp/error.hh",
+      "destination": "native/decompiler/cpp/error.hh",
+      "sha256": "0074d569610f87ce8092ab77fd194f5e6c1bc8477ed202f47aac64278dbc18c2",
+      "bytes": 2826
+    },
+    {
+      "source": "headless/core/decompiler/cpp/expression.cc",
+      "destination": "native/decompiler/cpp/expression.cc",
+      "sha256": "0362a8146598b6bc53165140aa3ecb9f1ac23dccb7bfd5bf498d1ed763a1cdf6",
+      "bytes": 26720
+    },
+    {
+      "source": "headless/core/decompiler/cpp/expression.hh",
+      "destination": "native/decompiler/cpp/expression.hh",
+      "sha256": "8a038370a7fd87be607cec30d28090aae03464c248be14d840ff7b3ff1a86b72",
+      "bytes": 11907
+    },
+    {
+      "source": "headless/core/decompiler/cpp/filemanage.cc",
+      "destination": "native/decompiler/cpp/filemanage.cc",
+      "sha256": "f13038352ae71eb6c459d5b52b148da8fb2196b098278f30d647e122e8366e73",
+      "bytes": 10680
+    },
+    {
+      "source": "headless/core/decompiler/cpp/filemanage.hh",
+      "destination": "native/decompiler/cpp/filemanage.hh",
+      "sha256": "fd794a746d1a339cacd1a144331a8addbff2e391015b0bfd0d00a029de3b4a44",
+      "bytes": 2288
+    },
+    {
+      "source": "headless/core/decompiler/cpp/float.cc",
+      "destination": "native/decompiler/cpp/float.cc",
+      "sha256": "55cb5a66368842e682e0ed00ce3cdf8b21415105850495d5eddedaf0d7dddee5",
+      "bytes": 19142
+    },
+    {
+      "source": "headless/core/decompiler/cpp/float.hh",
+      "destination": "native/decompiler/cpp/float.hh",
+      "sha256": "9be1637374e69d06966d4f953c663b6389446a6f999bbf208942561b807c6cab",
+      "bytes": 5280
+    },
+    {
+      "source": "headless/core/decompiler/cpp/flow.cc",
+      "destination": "native/decompiler/cpp/flow.cc",
+      "sha256": "bde7bed05b3cd01b0032610b517533e0414f2bb008cf87d81b7c9e577ad860ad",
+      "bytes": 49749
+    },
+    {
+      "source": "headless/core/decompiler/cpp/flow.hh",
+      "destination": "native/decompiler/cpp/flow.hh",
+      "sha256": "2c4282e469bf2ccb97b38ccccd25c813dc9a5438f64bec6e2ac3f34e7d707956",
+      "bytes": 12279
+    },
+    {
+      "source": "headless/core/decompiler/cpp/fspec.cc",
+      "destination": "native/decompiler/cpp/fspec.cc",
+      "sha256": "c8579aa89bca432b34896420d49811bd99572fc2bf80c50b2245de9a06f30b5c",
+      "bytes": 209741
+    },
+    {
+      "source": "headless/core/decompiler/cpp/fspec.hh",
+      "destination": "native/decompiler/cpp/fspec.hh",
+      "sha256": "2d6ad30382ae82a954700fe05b8252624b1a674092669ec6200f07c2fbd391ba",
+      "bytes": 113439
+    },
+    {
+      "source": "headless/core/decompiler/cpp/funcdata_block.cc",
+      "destination": "native/decompiler/cpp/funcdata_block.cc",
+      "sha256": "6c25a1b71fcc6c55d3e194a4e3a7d0c0977881ab0d28f8ce56b3a7f08f8eec09",
+      "bytes": 39249
+    },
+    {
+      "source": "headless/core/decompiler/cpp/funcdata_op.cc",
+      "destination": "native/decompiler/cpp/funcdata_op.cc",
+      "sha256": "765bf51828d4f0e44a7b3e2040341342a23c8d385d7b31a2da2aede77aa2b289",
+      "bytes": 51870
+    },
+    {
+      "source": "headless/core/decompiler/cpp/funcdata_varnode.cc",
+      "destination": "native/decompiler/cpp/funcdata_varnode.cc",
+      "sha256": "318b2f68fbf93375d826a8c2418661801b84a045751b7b7109775dc0f7caf388",
+      "bytes": 82748
+    },
+    {
+      "source": "headless/core/decompiler/cpp/funcdata.cc",
+      "destination": "native/decompiler/cpp/funcdata.cc",
+      "sha256": "dadd0dd6e31acebdb5d1d95b14f0314c999aa6ecdfb700ec0a821b61e79644d0",
+      "bytes": 37885
+    },
+    {
+      "source": "headless/core/decompiler/cpp/funcdata.hh",
+      "destination": "native/decompiler/cpp/funcdata.hh",
+      "sha256": "10296e27a8d5ca375f81e9ea8358a67fe8e62b60de4922e60464965c56d918ab",
+      "bytes": 47825
+    },
+    {
+      "source": "headless/core/decompiler/cpp/globalcontext.cc",
+      "destination": "native/decompiler/cpp/globalcontext.cc",
+      "sha256": "d69f3d73e928874c52514a9119c34043e84fdedb517b59ebb28159c296a5a429",
+      "bytes": 21912
+    },
+    {
+      "source": "headless/core/decompiler/cpp/globalcontext.hh",
+      "destination": "native/decompiler/cpp/globalcontext.hh",
+      "sha256": "d388e1576bdee52c76195d9ba8039f2d3e38171a98088ff6628f11a9ef0c6d6d",
+      "bytes": 19023
+    },
+    {
+      "source": "headless/core/decompiler/cpp/grammar.hh",
+      "destination": "native/decompiler/cpp/grammar.hh",
+      "sha256": "a82cdf70d24f84b54c05b7f71f96d49fc1c387e0bcffc3444d0215a2763d57f2",
+      "bytes": 10059
+    },
+    {
+      "source": "headless/core/decompiler/cpp/graph.cc",
+      "destination": "native/decompiler/cpp/graph.cc",
+      "sha256": "a29398c750ef8cc5cc693d1d3a8c37b5000ed2b7e568b80b22360e43b4f04e17",
+      "bytes": 15894
+    },
+    {
+      "source": "headless/core/decompiler/cpp/graph.hh",
+      "destination": "native/decompiler/cpp/graph.hh",
+      "sha256": "8525260245d58f9a9b6a5d316972dab1dbedd39bf7a5c91cba6a85d56921d06d",
+      "bytes": 941
+    },
+    {
+      "source": "headless/core/decompiler/cpp/heritage.cc",
+      "destination": "native/decompiler/cpp/heritage.cc",
+      "sha256": "b6d1f700b80335d23eac124f369b42ea1e147080aeb0563d9a265c03d832b695",
+      "bytes": 108117
+    },
+    {
+      "source": "headless/core/decompiler/cpp/heritage.hh",
+      "destination": "native/decompiler/cpp/heritage.hh",
+      "sha256": "51f53de723134951686524243c0cf427c9123325d1a1dbefafe9bb985ae06e16",
+      "bytes": 19294
+    },
+    {
+      "source": "headless/core/decompiler/cpp/ifacedecomp.hh",
+      "destination": "native/decompiler/cpp/ifacedecomp.hh",
+      "sha256": "00e5a0ec436d409f69ee9fbd2dc756dcd23d10bf20ce58d1ee6bba085cddf5b6",
+      "bytes": 16493
+    },
+    {
+      "source": "headless/core/decompiler/cpp/ifaceterm.hh",
+      "destination": "native/decompiler/cpp/ifaceterm.hh",
+      "sha256": "6420bd9c7a1147095df6784c4cab30fc5abde14d6b90239624eecc1000584d14",
+      "bytes": 2003
+    },
+    {
+      "source": "headless/core/decompiler/cpp/inject_sleigh.cc",
+      "destination": "native/decompiler/cpp/inject_sleigh.cc",
+      "sha256": "81d917e03c4b5965a0475cdd41e3f37a82c8a8857f9f50057e19577ea265eb33",
+      "bytes": 18218
+    },
+    {
+      "source": "headless/core/decompiler/cpp/inject_sleigh.hh",
+      "destination": "native/decompiler/cpp/inject_sleigh.hh",
+      "sha256": "9214d5611ea814521bc335400268c23d3d2374569a9a36a80aa2d9c068fd6972",
+      "bytes": 6454
+    },
+    {
+      "source": "headless/core/decompiler/cpp/interface.hh",
+      "destination": "native/decompiler/cpp/interface.hh",
+      "sha256": "b87d544a523f2253215d5cb65720a4ce0a4b32cac4be09557eced6ea477f65a1",
+      "bytes": 12624
+    },
+    {
+      "source": "headless/core/decompiler/cpp/jumptable.cc",
+      "destination": "native/decompiler/cpp/jumptable.cc",
+      "sha256": "c8bf07367f23f827e0d290bb6bfb3c2ef9db67e2c9543931203b6b627892b7fe",
+      "bytes": 96517
+    },
+    {
+      "source": "headless/core/decompiler/cpp/jumptable.hh",
+      "destination": "native/decompiler/cpp/jumptable.hh",
+      "sha256": "3d26746eab3763dd76a15082105e928fca81abf06f828cee44a0b3da0e682ad6",
+      "bytes": 39491
+    },
+    {
+      "source": "headless/core/decompiler/cpp/libdecomp.hh",
+      "destination": "native/decompiler/cpp/libdecomp.hh",
+      "sha256": "6fa1b18819ca47e8bd8aa45fb8c2e56ff75da8db04dad823329cdf3e9106a351",
+      "bytes": 1491
+    },
+    {
+      "source": "headless/core/decompiler/cpp/loadimage_bfd.hh",
+      "destination": "native/decompiler/cpp/loadimage_bfd.hh",
+      "sha256": "d0b84fc45e249b2fc66acf5c5e06ccbec25296bd9306fb958ef5fc58205a6ad3",
+      "bytes": 3062
+    },
+    {
+      "source": "headless/core/decompiler/cpp/loadimage_xml.hh",
+      "destination": "native/decompiler/cpp/loadimage_xml.hh",
+      "sha256": "969ce4b4d5d7ff333480ad3369fe5c9a2e8fb5f62a32bad7881c1284df9ea622",
+      "bytes": 2524
+    },
+    {
+      "source": "headless/core/decompiler/cpp/loadimage.cc",
+      "destination": "native/decompiler/cpp/loadimage.cc",
+      "sha256": "feaaab99fbf8aa96a8749c546e021177731a9460bb0acf456749461c119aede5",
+      "bytes": 3093
+    },
+    {
+      "source": "headless/core/decompiler/cpp/loadimage.hh",
+      "destination": "native/decompiler/cpp/loadimage.hh",
+      "sha256": "693824c67bb0444dec759d642b823ab790093bba9c7b679de37a5317f8888301",
+      "bytes": 10226
+    },
+    {
+      "source": "headless/core/decompiler/cpp/marshal.cc",
+      "destination": "native/decompiler/cpp/marshal.cc",
+      "sha256": "f2770d67814b5d69aec3a327a8d4cc1b4b153ee75d322240b02d14c2957daab0",
+      "bytes": 35127
+    },
+    {
+      "source": "headless/core/decompiler/cpp/marshal.hh",
+      "destination": "native/decompiler/cpp/marshal.hh",
+      "sha256": "f096b421dce7e71590420a1215b340fd64b9e4013c57a276c779c32e104f6701",
+      "bytes": 41143
+    },
+    {
+      "source": "headless/core/decompiler/cpp/memstate.cc",
+      "destination": "native/decompiler/cpp/memstate.cc",
+      "sha256": "ef68ee18511cac1bec55a602c64e43f57bc4755ca00e8204f411434d51d27f92",
+      "bytes": 25697
+    },
+    {
+      "source": "headless/core/decompiler/cpp/memstate.hh",
+      "destination": "native/decompiler/cpp/memstate.hh",
+      "sha256": "305b61c3df12db6ae66c3d064629a444b267b952c4cf2c4432d2f3cfef51b968",
+      "bytes": 9615
+    },
+    {
+      "source": "headless/core/decompiler/cpp/merge.cc",
+      "destination": "native/decompiler/cpp/merge.cc",
+      "sha256": "bfcc34d726fcceac0ef0ffb46e0cddb5d1fc4b8d1d35ca8b640f56f114df42ce",
+      "bytes": 60582
+    },
+    {
+      "source": "headless/core/decompiler/cpp/merge.hh",
+      "destination": "native/decompiler/cpp/merge.hh",
+      "sha256": "24cd96b0aa81c29ae3807e0660a055eb948bb5cfb89bb21ff47d10df7a6a9fa5",
+      "bytes": 8347
+    },
+    {
+      "source": "headless/core/decompiler/cpp/modelrules.cc",
+      "destination": "native/decompiler/cpp/modelrules.cc",
+      "sha256": "2ec9ec28ab1bce02c00b6c9a68cf148de0d7a980f00384b21db8d5926daf3df1",
+      "bytes": 55280
+    },
+    {
+      "source": "headless/core/decompiler/cpp/modelrules.hh",
+      "destination": "native/decompiler/cpp/modelrules.hh",
+      "sha256": "4a2da13bb4ed21147e86ebb38ef98e35a2a7bfdd68baa2ff5a54d1de89eb6899",
+      "bytes": 31807
+    },
+    {
+      "source": "headless/core/decompiler/cpp/multiprecision.cc",
+      "destination": "native/decompiler/cpp/multiprecision.cc",
+      "sha256": "e9220441f88b6cb22a47b57dd29a0984d97cc9537354baa04c35561a928f4186",
+      "bytes": 9945
+    },
+    {
+      "source": "headless/core/decompiler/cpp/multiprecision.hh",
+      "destination": "native/decompiler/cpp/multiprecision.hh",
+      "sha256": "4f863c91c131d8a98154101fcab31b9e6d041944855bafbbe7546e8bb74aa434",
+      "bytes": 1599
+    },
+    {
+      "source": "headless/core/decompiler/cpp/op.cc",
+      "destination": "native/decompiler/cpp/op.cc",
+      "sha256": "6bf8b238c6feec27435361dd10521c7d652b161a7253adac8f5fd8ac3f6094e0",
+      "bytes": 38232
+    },
+    {
+      "source": "headless/core/decompiler/cpp/op.hh",
+      "destination": "native/decompiler/cpp/op.hh",
+      "sha256": "8723d7548edf6a643bc8a6891c64ea6e7dbfb137d0d48d8c4ac868d8fe2f3a6d",
+      "bytes": 25023
+    },
+    {
+      "source": "headless/core/decompiler/cpp/opbehavior.cc",
+      "destination": "native/decompiler/cpp/opbehavior.cc",
+      "sha256": "b8a1363a9cc065b63690bc08e9cb71d1f3d9f6ac21d34371aa4c9d218677810e",
+      "bytes": 22941
+    },
+    {
+      "source": "headless/core/decompiler/cpp/opbehavior.hh",
+      "destination": "native/decompiler/cpp/opbehavior.hh",
+      "sha256": "0cbd1bceef7c62db71d2c5dc9f7a3e85b60b04305d086ad8be89831d7d5caf12",
+      "bytes": 21541
+    },
+    {
+      "source": "headless/core/decompiler/cpp/opcodes.cc",
+      "destination": "native/decompiler/cpp/opcodes.cc",
+      "sha256": "bf8849e24f34239e82ac3250ff3238e5ac33c0ead154a0cbdf4e0a9f761e33bb",
+      "bytes": 4450
+    },
+    {
+      "source": "headless/core/decompiler/cpp/opcodes.hh",
+      "destination": "native/decompiler/cpp/opcodes.hh",
+      "sha256": "28a5eff468be5cc3593b610ec71f43cc7855ae9e8196486918ce4203c177f7ae",
+      "bytes": 6047
+    },
+    {
+      "source": "headless/core/decompiler/cpp/options.cc",
+      "destination": "native/decompiler/cpp/options.cc",
+      "sha256": "cbad80eb18bbeb8906b83ec1773ba76ab29e6257c2b999bacac12106dd984461",
+      "bytes": 37753
+    },
+    {
+      "source": "headless/core/decompiler/cpp/options.hh",
+      "destination": "native/decompiler/cpp/options.hh",
+      "sha256": "5027808ed2e79e3390f726376c79b1e1f6f55cfbd080b51d62f12cb7073d79f6",
+      "bytes": 15956
+    },
+    {
+      "source": "headless/core/decompiler/cpp/override.cc",
+      "destination": "native/decompiler/cpp/override.cc",
+      "sha256": "a85e410f1ca7865c3fc0e3e0f8ebd2cdfc6fe6dffb08254fa675b033c3b6ae4f",
+      "bytes": 14212
+    },
+    {
+      "source": "headless/core/decompiler/cpp/override.hh",
+      "destination": "native/decompiler/cpp/override.hh",
+      "sha256": "9ce85b09bdfc224e78165d1df981f1b29c11b3e849c31ccca378eb4279386808",
+      "bytes": 4775
+    },
+    {
+      "source": "headless/core/decompiler/cpp/paramid.cc",
+      "destination": "native/decompiler/cpp/paramid.cc",
+      "sha256": "ca9fb5634c5a1b2a8ee31278a7555be4ca202c9f80e4bf0cb827d0542758e682",
+      "bytes": 10060
+    },
+    {
+      "source": "headless/core/decompiler/cpp/paramid.hh",
+      "destination": "native/decompiler/cpp/paramid.hh",
+      "sha256": "7f911c679dcd068b83cc8668773e016026802db3eeb7a0994cb5863f23029c40",
+      "bytes": 2852
+    },
+    {
+      "source": "headless/core/decompiler/cpp/partmap.hh",
+      "destination": "native/decompiler/cpp/partmap.hh",
+      "sha256": "fe6c60fcb37febd95e0749b9be759c161008f99f2cadda10a80053131d1b6341",
+      "bytes": 8758
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodecompile.cc",
+      "destination": "native/decompiler/cpp/pcodecompile.cc",
+      "sha256": "a88ae2db092554061cf0d606a6edef962050a2311c21afe94b7e7e6019a4d7e1",
+      "bytes": 25090
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodecompile.hh",
+      "destination": "native/decompiler/cpp/pcodecompile.hh",
+      "sha256": "fc6f6bb55fcfc03d54acd90995b06af278912919a6f7aa9148d5b5d43c04bab9",
+      "bytes": 4760
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodeinject.cc",
+      "destination": "native/decompiler/cpp/pcodeinject.cc",
+      "sha256": "0e55b99a36623c08a10f53068ff1112d973a173fad9f6395be7c7f228cd89e75",
+      "bytes": 12593
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodeinject.hh",
+      "destination": "native/decompiler/cpp/pcodeinject.hh",
+      "sha256": "d997a75d3c5bb0e7b44585ef423b6462fd507542fadd76fd71cce14ffd51b1fa",
+      "bytes": 16463
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodeparse.cc",
+      "destination": "native/decompiler/cpp/pcodeparse.cc",
+      "sha256": "5b47776b6ffa0eedc36caa571dacc7b65ebde25bb39f7108e40ce93c314f151f",
+      "bytes": 123878
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcodeparse.hh",
+      "destination": "native/decompiler/cpp/pcodeparse.hh",
+      "sha256": "6aeb0e7ad054c9ae08c4ceb2a2074f2f3151753a8cfc6b9666f358e484c4c3b9",
+      "bytes": 3526
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcoderaw.cc",
+      "destination": "native/decompiler/cpp/pcoderaw.cc",
+      "sha256": "11f9dafbc09ab7f787ca4480f7a6bb346122d9489bbbe567c78593e92128c6bf",
+      "bytes": 4163
+    },
+    {
+      "source": "headless/core/decompiler/cpp/pcoderaw.hh",
+      "destination": "native/decompiler/cpp/pcoderaw.hh",
+      "sha256": "74704dcdb657e811a06e34b78f991e68147230b44b7a78c04148669b91d3504a",
+      "bytes": 8824
+    },
+    {
+      "source": "headless/core/decompiler/cpp/prefersplit.cc",
+      "destination": "native/decompiler/cpp/prefersplit.cc",
+      "sha256": "bafed8a56e8f61cfee57d8d73dec0362470efc1d370c2b9e6a84866ffd4d1fc0",
+      "bytes": 19399
+    },
+    {
+      "source": "headless/core/decompiler/cpp/prefersplit.hh",
+      "destination": "native/decompiler/cpp/prefersplit.hh",
+      "sha256": "2b26e660f18152f6585e65814a7eb3f62d62562dd657f93f8da37663a8cdfa8c",
+      "bytes": 2929
+    },
+    {
+      "source": "headless/core/decompiler/cpp/prettyprint.cc",
+      "destination": "native/decompiler/cpp/prettyprint.cc",
+      "sha256": "60bd214b7a8109c9efdafdcae7414f1b0b899c13faf214ac7c55db7d14511ce7",
+      "bytes": 31862
+    },
+    {
+      "source": "headless/core/decompiler/cpp/prettyprint.hh",
+      "destination": "native/decompiler/cpp/prettyprint.hh",
+      "sha256": "166e5f8aada2ba69c7ee78807aad370206fd4e4f7ecedeade0b6116108586112",
+      "bytes": 54480
+    },
+    {
+      "source": "headless/core/decompiler/cpp/printc.cc",
+      "destination": "native/decompiler/cpp/printc.cc",
+      "sha256": "77e3315670f3b3b420a7cce0d4e5b70523a781159551849857ff2d0f89a92b8e",
+      "bytes": 112091
+    },
+    {
+      "source": "headless/core/decompiler/cpp/printc.hh",
+      "destination": "native/decompiler/cpp/printc.hh",
+      "sha256": "ccdbcdb3e05a663d58249832c89cdd842d5e4c3911b84ec14ba50f403bd7e90e",
+      "bytes": 23033
+    },
+    {
+      "source": "headless/core/decompiler/cpp/printlanguage.cc",
+      "destination": "native/decompiler/cpp/printlanguage.cc",
+      "sha256": "62af8585c8098d06af09c86a1c6d2552676a979b69416e961b9f676cc3e407f9",
+      "bytes": 24839
+    },
+    {
+      "source": "headless/core/decompiler/cpp/printlanguage.hh",
+      "destination": "native/decompiler/cpp/printlanguage.hh",
+      "sha256": "d59c1995ebdd35f19adf94830dd38210e31b794b99372c059fbc8240b5b76c97",
+      "bytes": 34548
+    },
+    {
+      "source": "headless/core/decompiler/cpp/rangemap.hh",
+      "destination": "native/decompiler/cpp/rangemap.hh",
+      "sha256": "2abc18210bec58433794b4804613f6232ea9411c137a120d7ed71951f62fed30",
+      "bytes": 17189
+    },
+    {
+      "source": "headless/core/decompiler/cpp/rangeutil.cc",
+      "destination": "native/decompiler/cpp/rangeutil.cc",
+      "sha256": "87961f81a35243e1089e025a476f910b19941f357172e1672725c0438e8153a3",
+      "bytes": 77589
+    },
+    {
+      "source": "headless/core/decompiler/cpp/rangeutil.hh",
+      "destination": "native/decompiler/cpp/rangeutil.hh",
+      "sha256": "19664ac2aed8a7562161017eb33e2a53878ce13f6721a60b79a510288013207d",
+      "bytes": 23900
+    },
+    {
+      "source": "headless/core/decompiler/cpp/raw_arch.hh",
+      "destination": "native/decompiler/cpp/raw_arch.hh",
+      "sha256": "d90a08e7e547db777b4fc6d1ac7cdad480ee829cf5b445337962227b68ae7179",
+      "bytes": 2293
+    },
+    {
+      "source": "headless/core/decompiler/cpp/ruleaction.cc",
+      "destination": "native/decompiler/cpp/ruleaction.cc",
+      "sha256": "1af22c134b936a032ff0ff8ffecbbb5d41026b303bf1af881f063d49cadce52e",
+      "bytes": 361647
+    },
+    {
+      "source": "headless/core/decompiler/cpp/ruleaction.hh",
+      "destination": "native/decompiler/cpp/ruleaction.hh",
+      "sha256": "683d7175428cd32d218448e768daea1d49622a6c6a286dd7f421defab71bb5a7",
+      "bytes": 67595
+    },
+    {
+      "source": "headless/core/decompiler/cpp/rulecompile.hh",
+      "destination": "native/decompiler/cpp/rulecompile.hh",
+      "sha256": "e17a11fddbfaad8d5b26f0731dc05c37b9b397dfc39b0dd0e30a2fb4c72f7e53",
+      "bytes": 8053
+    },
+    {
+      "source": "headless/core/decompiler/cpp/semantics.cc",
+      "destination": "native/decompiler/cpp/semantics.cc",
+      "sha256": "74a68e500e759fce0e90b7925af04b3061b23226939b27ce95b9c52d7fed0e81",
+      "bytes": 25753
+    },
+    {
+      "source": "headless/core/decompiler/cpp/semantics.hh",
+      "destination": "native/decompiler/cpp/semantics.hh",
+      "sha256": "9ace4d989b300225a3749588210a4e90e7bfd95685969dab9b5813d96b9735bc",
+      "bytes": 8318
+    },
+    {
+      "source": "headless/core/decompiler/cpp/signature.cc",
+      "destination": "native/decompiler/cpp/signature.cc",
+      "sha256": "74e2522e019c8d871852dd0d27c80558f24ed3e854c9e8d762ba00d12b80d076",
+      "bytes": 36517
+    },
+    {
+      "source": "headless/core/decompiler/cpp/signature.hh",
+      "destination": "native/decompiler/cpp/signature.hh",
+      "sha256": "1030fa0e87cdd9d5deaf480504cb146c6526be5ef15808c407c44062380d9240",
+      "bytes": 19843
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slaformat.cc",
+      "destination": "native/decompiler/cpp/slaformat.cc",
+      "sha256": "5645e18d6cca036a3207f1df1a5911335642299254657e53c2516375f6ad33e8",
+      "bytes": 12891
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slaformat.hh",
+      "destination": "native/decompiler/cpp/slaformat.hh",
+      "sha256": "fe8579bf9e537b54c4fffeacf785e255993ae4b27daa287c345fe56279473aee",
+      "bytes": 12274
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleigh_arch.cc",
+      "destination": "native/decompiler/cpp/sleigh_arch.cc",
+      "sha256": "28f77e662b2cb394745844abff5e1ed8377816a07fc2ea614ab5e0dba092ff8a",
+      "bytes": 19821
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleigh_arch.hh",
+      "destination": "native/decompiler/cpp/sleigh_arch.hh",
+      "sha256": "bd583dc204224f85d373158196e29d6a9834ebca2835dab6388244db8077f992",
+      "bytes": 9222
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleigh.cc",
+      "destination": "native/decompiler/cpp/sleigh.cc",
+      "sha256": "613c0a2d1bc0715c7b382737286cb96f1514f55ccb4069afbb3f00078c30ce99",
+      "bytes": 26899
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleigh.hh",
+      "destination": "native/decompiler/cpp/sleigh.hh",
+      "sha256": "08ed171da76fa53c109ab100460a6aa50390ef79fbc271d81c06b7819b1f560d",
+      "bytes": 21057
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleighbase.cc",
+      "destination": "native/decompiler/cpp/sleighbase.cc",
+      "sha256": "e9393aab29643547467ea360d112228d96767df5b93c26717004485e08fc5ca0",
+      "bytes": 13454
+    },
+    {
+      "source": "headless/core/decompiler/cpp/sleighbase.hh",
+      "destination": "native/decompiler/cpp/sleighbase.hh",
+      "sha256": "df3b8fb441ac3bf09de68b9baa43bc183d65b067614c6196fb5298ca71b6ff18",
+      "bytes": 5477
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slgh_compile.cc",
+      "destination": "native/decompiler/cpp/slgh_compile.cc",
+      "sha256": "77f53365833a00b1b451ac995c5a879d684a2284cf0a6dc1d1b56c953eb17cc7",
+      "bytes": 141154
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slgh_compile.hh",
+      "destination": "native/decompiler/cpp/slgh_compile.hh",
+      "sha256": "1829e2c929f277ff3d2fcf1aa71ab5ec909a840fa38197eb8bf41f30061ca97c",
+      "bytes": 28627
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghparse.cc",
+      "destination": "native/decompiler/cpp/slghparse.cc",
+      "sha256": "a52a41f48282c72ac243f09e0aa547c808d2caf10a024b4152c759524a0a4c50",
+      "bytes": 183750
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghparse.hh",
+      "destination": "native/decompiler/cpp/slghparse.hh",
+      "sha256": "c8f99eb391ab0603277b5bc6ca4f1711296fe8b82a6c06c80d7af117f4573ae8",
+      "bytes": 10122
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghpatexpress.cc",
+      "destination": "native/decompiler/cpp/slghpatexpress.cc",
+      "sha256": "09d2d0a05beaa82e980c52f577dd87354dc3b723c75224100001e1ccf5f774f2",
+      "bytes": 44774
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghpatexpress.hh",
+      "destination": "native/decompiler/cpp/slghpatexpress.hh",
+      "sha256": "0bc8c0dbe989ff12900a052364b8480a121b4bed82a65f0a794b4c5f20e42e49",
+      "bytes": 20950
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghpattern.cc",
+      "destination": "native/decompiler/cpp/slghpattern.cc",
+      "sha256": "47602a13e8b5df155bd79ebf706f4fa32d26bd6dd59357d7b8a3847958a3171f",
+      "bytes": 26846
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghpattern.hh",
+      "destination": "native/decompiler/cpp/slghpattern.hh",
+      "sha256": "8001259b777cab3d7c41099f411e248ca8fdb5b3084cdba96c30fcd22f563afa",
+      "bytes": 8119
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghscan.cc",
+      "destination": "native/decompiler/cpp/slghscan.cc",
+      "sha256": "94e197a86ea3c981d0f548fa2303673a897aedd1240eeb7dd3b6b46f6e9feaad",
+      "bytes": 99621
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghsymbol.cc",
+      "destination": "native/decompiler/cpp/slghsymbol.cc",
+      "sha256": "cdebf072e7033ed7fe68a8e4f25c2e12f2785027efbc60c85cee37eb92b76dbd",
+      "bytes": 72803
+    },
+    {
+      "source": "headless/core/decompiler/cpp/slghsymbol.hh",
+      "destination": "native/decompiler/cpp/slghsymbol.hh",
+      "sha256": "e041f100c22cf054319a2368f2ddd0596ed873c9e8b0dfebb986ea258b839f40",
+      "bytes": 28186
+    },
+    {
+      "source": "headless/core/decompiler/cpp/space.cc",
+      "destination": "native/decompiler/cpp/space.cc",
+      "sha256": "acf2877f207b4958ab01cd98a6c99b43fd143236bf752b0c0efdb4d5670f38f3",
+      "bytes": 22535
+    },
+    {
+      "source": "headless/core/decompiler/cpp/space.hh",
+      "destination": "native/decompiler/cpp/space.hh",
+      "sha256": "2b9411faf3cd994e3402412f7053962bc21083a01583ca98137d3db399e1afdc",
+      "bytes": 26813
+    },
+    {
+      "source": "headless/core/decompiler/cpp/stringmanage.cc",
+      "destination": "native/decompiler/cpp/stringmanage.cc",
+      "sha256": "50c9946dd6e47ded6c021882e78273bf8a60e9dcf1c70923a0a39326a1381bb2",
+      "bytes": 15779
+    },
+    {
+      "source": "headless/core/decompiler/cpp/stringmanage.hh",
+      "destination": "native/decompiler/cpp/stringmanage.hh",
+      "sha256": "42324b02e8f205015ec76954c49c2db1efe9d229bd3d8468213ee7a031b2ab28",
+      "bytes": 4605
+    },
+    {
+      "source": "headless/core/decompiler/cpp/subflow.cc",
+      "destination": "native/decompiler/cpp/subflow.cc",
+      "sha256": "fd96c3311acf566d4a31b0f2fee9c97f5c772790104abfa867ef6b8b41df8c0c",
+      "bytes": 149564
+    },
+    {
+      "source": "headless/core/decompiler/cpp/subflow.hh",
+      "destination": "native/decompiler/cpp/subflow.hh",
+      "sha256": "f6d51bbb20fc0a4833bbb2d43aa00c5bd0135a99bbb160c14b11c0fbb9d24389",
+      "bytes": 23516
+    },
+    {
+      "source": "headless/core/decompiler/cpp/test.hh",
+      "destination": "native/decompiler/cpp/test.hh",
+      "sha256": "b6a0a70d7e42f5da09877e8750c0339ec6fdb81f1ff4a316b186679b631e731d",
+      "bytes": 5151
+    },
+    {
+      "source": "headless/core/decompiler/cpp/testfunction.hh",
+      "destination": "native/decompiler/cpp/testfunction.hh",
+      "sha256": "61d42d319853c2dc9aa75af4e1de8970458c63368200b989128a26986f93b308",
+      "bytes": 5457
+    },
+    {
+      "source": "headless/core/decompiler/cpp/transform.cc",
+      "destination": "native/decompiler/cpp/transform.cc",
+      "sha256": "f0f08b9f8045854091cc86ce43bf1584d7f8b89997b87c2b2ccbfeb1f51b0b28",
+      "bytes": 27520
+    },
+    {
+      "source": "headless/core/decompiler/cpp/transform.hh",
+      "destination": "native/decompiler/cpp/transform.hh",
+      "sha256": "4388387a9abb94968e90c7d26c2474f3df58e2e97e3ef9ae33aa4b9ca2540c82",
+      "bytes": 13838
+    },
+    {
+      "source": "headless/core/decompiler/cpp/translate.cc",
+      "destination": "native/decompiler/cpp/translate.cc",
+      "sha256": "c093622122abc4a4bd4a495a03f486db4f9cea3413a52fcdc9a0a330c8108955",
+      "bytes": 39680
+    },
+    {
+      "source": "headless/core/decompiler/cpp/translate.hh",
+      "destination": "native/decompiler/cpp/translate.hh",
+      "sha256": "127b56df655b5fc339681a4e1c80772c2fd3433def78f0aa48b076cd5a067e0b",
+      "bytes": 31503
+    },
+    {
+      "source": "headless/core/decompiler/cpp/type.cc",
+      "destination": "native/decompiler/cpp/type.cc",
+      "sha256": "fab1a5601f147ca9c5ceedb1f74d3dd4076bfeac2357837ec1a5d405e2fae956",
+      "bytes": 175976
+    },
+    {
+      "source": "headless/core/decompiler/cpp/type.hh",
+      "destination": "native/decompiler/cpp/type.hh",
+      "sha256": "53215dadc2b588e7ca737cfe3a58fdb9c5b4653291b71de6c2a32ea870872b28",
+      "bytes": 65257
+    },
+    {
+      "source": "headless/core/decompiler/cpp/typeop.cc",
+      "destination": "native/decompiler/cpp/typeop.cc",
+      "sha256": "fe420fa6547f9d36be7b517cc4baa1c2886f41f67af3fbb99a8d1e6210461d8c",
+      "bytes": 87645
+    },
+    {
+      "source": "headless/core/decompiler/cpp/typeop.hh",
+      "destination": "native/decompiler/cpp/typeop.hh",
+      "sha256": "9563016d7218c218f864e5cdaaa33a85cc585e54eeb39670afcf7a8bd55e63aa",
+      "bytes": 43934
+    },
+    {
+      "source": "headless/core/decompiler/cpp/types.h",
+      "destination": "native/decompiler/cpp/types.h",
+      "sha256": "304f6f63fac4a7eaf6aa0c344e2c0401b67e44a1d6ef35b7afabca63d649aebf",
+      "bytes": 2988
+    },
+    {
+      "source": "headless/core/decompiler/cpp/unify.hh",
+      "destination": "native/decompiler/cpp/unify.hh",
+      "sha256": "4fdda9b3ff2fbe0c108c96160fe01cf6c6e62a2c5fb0fc033c685719e0ae755d",
+      "bytes": 31332
+    },
+    {
+      "source": "headless/core/decompiler/cpp/unionresolve.cc",
+      "destination": "native/decompiler/cpp/unionresolve.cc",
+      "sha256": "26b7b34606d0c0093b977781676b6d24836f76427f30931d353e8c64a1c19dbf",
+      "bytes": 37020
+    },
+    {
+      "source": "headless/core/decompiler/cpp/unionresolve.hh",
+      "destination": "native/decompiler/cpp/unionresolve.hh",
+      "sha256": "9f278276c9c9d05d6a8913196be208c657a5c67e701965aa2229a83988622fb8",
+      "bytes": 10020
+    },
+    {
+      "source": "headless/core/decompiler/cpp/userop.cc",
+      "destination": "native/decompiler/cpp/userop.cc",
+      "sha256": "57781dd222b1ed84502ed98d2e38ec15e742022e41d1c596adf5e005576157fe",
+      "bytes": 22513
+    },
+    {
+      "source": "headless/core/decompiler/cpp/userop.hh",
+      "destination": "native/decompiler/cpp/userop.hh",
+      "sha256": "db6c6652ddabf83f9bcd90844d90129d7f673f9d54019e2d5034b95d71732540",
+      "bytes": 19157
+    },
+    {
+      "source": "headless/core/decompiler/cpp/variable.cc",
+      "destination": "native/decompiler/cpp/variable.cc",
+      "sha256": "2b01003765db20a0012c8dbd27108eee774b1be7df6d50d35a54efb4711adebf",
+      "bytes": 42307
+    },
+    {
+      "source": "headless/core/decompiler/cpp/variable.hh",
+      "destination": "native/decompiler/cpp/variable.hh",
+      "sha256": "d75017d67aa4425f57a42b4c5c7f67c1169ac3953ee8db408098a9ef8cf7beb3",
+      "bytes": 20435
+    },
+    {
+      "source": "headless/core/decompiler/cpp/varmap.cc",
+      "destination": "native/decompiler/cpp/varmap.cc",
+      "sha256": "985d48613d26c95983e69eca267f627c304a6197eabfec3e419f916a9ddf5479",
+      "bytes": 58229
+    },
+    {
+      "source": "headless/core/decompiler/cpp/varmap.hh",
+      "destination": "native/decompiler/cpp/varmap.hh",
+      "sha256": "296faf05ead7407c02c8fe5c338f9fe098d75fbf67e9b1ae2bf9a68729d9408a",
+      "bytes": 15586
+    },
+    {
+      "source": "headless/core/decompiler/cpp/varnode.cc",
+      "destination": "native/decompiler/cpp/varnode.cc",
+      "sha256": "c2a47cff2473a39e616b434106e0d8df25564512c2ed27d1cc6299d6ac4a2a60",
+      "bytes": 66821
+    },
+    {
+      "source": "headless/core/decompiler/cpp/varnode.hh",
+      "destination": "native/decompiler/cpp/varnode.hh",
+      "sha256": "ec5e211b05fc5e6cbd8c77e919a965974be6cad079b4b67a2d6c2557db40ebb1",
+      "bytes": 33787
+    },
+    {
+      "source": "headless/core/decompiler/cpp/xml_arch.hh",
+      "destination": "native/decompiler/cpp/xml_arch.hh",
+      "sha256": "63c850a2c7fcf74dd2b5882f987387d1b49c6dc07a2eeeb635146e7c8ed426b6",
+      "bytes": 2254
+    },
+    {
+      "source": "headless/core/decompiler/cpp/xml.cc",
+      "destination": "native/decompiler/cpp/xml.cc",
+      "sha256": "ed950a2e084760853c7b64322f15f12fb26dacbd269bea4e9b8366feb469e594",
+      "bytes": 72014
+    },
+    {
+      "source": "headless/core/decompiler/cpp/xml.hh",
+      "destination": "native/decompiler/cpp/xml.hh",
+      "sha256": "128297766a37fe8e90e8585339ceabb5287b18c0da98240ee642086a45ec09df",
+      "bytes": 17408
+    },
+    {
+      "source": "headless/core/decompiler/zlib/adler32.c",
+      "destination": "native/decompiler/zlib/adler32.c",
+      "sha256": "d2af81a407f981ca99f88ce96c96920f0fa4687450b9f19b094411a9b90b15bc",
+      "bytes": 5020
+    },
+    {
+      "source": "headless/core/decompiler/zlib/deflate.c",
+      "destination": "native/decompiler/zlib/deflate.c",
+      "sha256": "86c2bb5370b892e4d995fc14661af48353dcd53994693534364dba059a7a428a",
+      "bytes": 81787
+    },
+    {
+      "source": "headless/core/decompiler/zlib/deflate.h",
+      "destination": "native/decompiler/zlib/deflate.h",
+      "sha256": "6294259c16d84f9125ecdcc10a37a09e0bd5fc8b4ebaeeb6c8415ecda3525c70",
+      "bytes": 14097
+    },
+    {
+      "source": "headless/core/decompiler/zlib/gzguts.h",
+      "destination": "native/decompiler/zlib/gzguts.h",
+      "sha256": "d772c783884af9c42a429ce7912b53f1b56281df7517fad2e9e9887bde89860d",
+      "bytes": 6732
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inffast.c",
+      "destination": "native/decompiler/zlib/inffast.c",
+      "sha256": "db28cf4a63a393dcc3b48501442c39520ae6c3cc6e4e105b6b0ee6bbfe234ed0",
+      "bytes": 12980
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inffast.h",
+      "destination": "native/decompiler/zlib/inffast.h",
+      "sha256": "ffa287937f391015ac93c30e1f663cae491348cf054b24b7d605fbfb212d01cd",
+      "bytes": 478
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inffixed.h",
+      "destination": "native/decompiler/zlib/inffixed.h",
+      "sha256": "ecdd7c90aa0336a9c5225d330ab12029c8cdcf21ae20bb95d570404f673135b4",
+      "bytes": 6388
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inflate.c",
+      "destination": "native/decompiler/zlib/inflate.c",
+      "sha256": "2bf18aca68cf441583132dffeb4f58fc829e874eb3b3d74507a6d11563ea0c12",
+      "bytes": 55575
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inflate.h",
+      "destination": "native/decompiler/zlib/inflate.h",
+      "sha256": "5cab8e1905005d20203078506199a9ade312ae47658d370b8e7e2fec3faa9ad2",
+      "bytes": 6739
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inftrees.c",
+      "destination": "native/decompiler/zlib/inftrees.c",
+      "sha256": "8c7cc065f8aaed52befa04ec75ee09f3ccf46699fc4f6cea12fdb645d98b4411",
+      "bytes": 13080
+    },
+    {
+      "source": "headless/core/decompiler/zlib/inftrees.h",
+      "destination": "native/decompiler/zlib/inftrees.h",
+      "sha256": "298daca458b45d57502c4631eb0b015fdd3c18be31418b56a1675992fcbe59c8",
+      "bytes": 2976
+    },
+    {
+      "source": "headless/core/decompiler/zlib/README.txt",
+      "destination": "native/decompiler/zlib/README.txt",
+      "sha256": "a7e55574f22d02e7d97d431b2bd51350a10c41fd1eb87565b14f725e74d55966",
+      "bytes": 568
+    },
+    {
+      "source": "headless/core/decompiler/zlib/trees.c",
+      "destination": "native/decompiler/zlib/trees.c",
+      "sha256": "24dee2a43a0511521962dec1a9b5a8eacf00e5cab50e6d90802d775e639bc417",
+      "bytes": 40993
+    },
+    {
+      "source": "headless/core/decompiler/zlib/trees.h",
+      "destination": "native/decompiler/zlib/trees.h",
+      "sha256": "44268612648ff3a69841d8a36cb78f793b751c5c47d2ef3f2f7a69ad11948e2d",
+      "bytes": 8528
+    },
+    {
+      "source": "headless/core/decompiler/zlib/zconf.h",
+      "destination": "native/decompiler/zlib/zconf.h",
+      "sha256": "4f73e2d80113813452f7e3c0117e0847db323902a795902dca0466d3488e53a7",
+      "bytes": 16556
+    },
+    {
+      "source": "headless/core/decompiler/zlib/zlib.h",
+      "destination": "native/decompiler/zlib/zlib.h",
+      "sha256": "5b3dc1c20e9b852ec1ef77f598c89129bae58de98d3773f91a4fc3071dd8cabf",
+      "bytes": 96885
+    },
+    {
+      "source": "headless/core/decompiler/zlib/zutil.c",
+      "destination": "native/decompiler/zlib/zutil.c",
+      "sha256": "c368365bfb0325ac2c8dae3bb9b503daf371515707f020c54060e38ceb4d1206",
+      "bytes": 7235
+    },
+    {
+      "source": "headless/core/decompiler/zlib/zutil.h",
+      "destination": "native/decompiler/zlib/zutil.h",
+      "sha256": "d757abb6e1bfe3fbc97f8179a8ca9865988a5eafacfe6ee48b5c6de6f18be8de",
+      "bytes": 6733
+    },
+    {
+      "source": "headless/cmake/NativeSources.cmake",
+      "destination": "native/cmake/NativeSources.cmake",
+      "sha256": "194df3255412fa178628b5c4ece3b8b7c0b0f102a9d2a52ad3011cf12080ab34",
+      "bytes": 2817
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AMXext.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AMXext.sinc",
+      "sha256": "2d8241d973bb3d3384cb4ac161729337040d53430438273f46d9ecde9ae53613",
+      "bytes": 4364
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_apple.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_apple.cspec",
+      "sha256": "d5f8cb95358ba17be6af51e41ba117bbda470eb057805aad4198b5e4f9a1d2ed",
+      "bytes": 8548
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AppleSilicon.sla",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AppleSilicon.sla",
+      "sha256": "d50ba57992dde472a4a523e17cfa601c052ed2f56047c1ab4054fc02a06ace03",
+      "bytes": 496970
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AppleSilicon.slaspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_AppleSilicon.slaspec",
+      "sha256": "9034c31ca2137eec0dd074a976f886157d9f819327e5e5d13398b3b4d119ab97",
+      "bytes": 99
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_base_PACoptions.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_base_PACoptions.sinc",
+      "sha256": "6b7c77988212836deec88f4905d7db38623ecc69f2a608b760b22489c15a0aea",
+      "bytes": 10297
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_golang.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_golang.cspec",
+      "sha256": "4658ac621ec7665658c10b86ffb8798cc8b4395c82aa9f899b4782ae1078028e",
+      "bytes": 10038
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_ilp32.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_ilp32.cspec",
+      "sha256": "c9e5d3ab01054ab3b9b5f2ad8a0a1f09fea0b7c193dcb92459346cc5ea48b0e4",
+      "bytes": 6359
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_swift.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_swift.cspec",
+      "sha256": "5633b58f27f7da02c9350a205cb26d213a830127cb408641c8eecf3465150860",
+      "bytes": 12239
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_win.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64_win.cspec",
+      "sha256": "32527efab83a0a5f32f7a5eb3da8fe69dad96b926981fb8ef6982bb1e1ed3ed5",
+      "bytes": 9510
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.cspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.cspec",
+      "sha256": "1e54d6a9e6cd98a7b9729ba79187d9f1969a61e2984378445bb67f339d439e00",
+      "bytes": 8276
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.ldefs",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.ldefs",
+      "sha256": "ad7af09d59b0c20dd80bac9f08d388148833c031ea7e440e18f0bf26639b1dfa",
+      "bytes": 3749
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.opinion",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.opinion",
+      "sha256": "8b4bcaef8bdff7dbe151d2d14888cf345ae07cb56297374a3b2b65b56bd7afc8",
+      "bytes": 2334
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.pspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.pspec",
+      "sha256": "45784c3d7374bc84aacba3707c5e21fc9b5ac36cce485167a22d72d96dde82c9",
+      "bytes": 5561
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.sla",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.sla",
+      "sha256": "ff6a7b03cdc9e7f3b168d4c8609e462816893891923758c9547c3edea513b17e",
+      "bytes": 495124
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.slaspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64.slaspec",
+      "sha256": "99381f51825b672b70e1006a111462e77c2384f5a1ea4e6b63669bc5027b3439",
+      "bytes": 68
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64base.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64base.sinc",
+      "sha256": "051b3cb809a803367ee1a28da33988e1be2ef9e2ff624233f793d80c94678162",
+      "bytes": 367844
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64BE.sla",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64BE.sla",
+      "sha256": "2c7698f6b3fa0e5e40eb53156b3e356e9c8157432c57df5d9660b9af50b7275c",
+      "bytes": 501231
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64BE.slaspec",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64BE.slaspec",
+      "sha256": "9215124e42ebf29184c2e46ea6399446736cc4eb323023aa98685bbd340ac097",
+      "bytes": 65
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64instructions.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64instructions.sinc",
+      "sha256": "fde6454c27ed9c2ab99cbdc403af8d188b7cf3a044468b9d9569654afcf04683",
+      "bytes": 141768
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64ldst.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64ldst.sinc",
+      "sha256": "bc2a55815b9368a0a8d1a14e165e32e39cce54337575c7eae287e4e008ec6aa8",
+      "bytes": 396489
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64neon.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64neon.sinc",
+      "sha256": "9bedaa46f0b312debd7a48d43942a7f77d4f14122e9a22e8d63c1fbc9ed693ef",
+      "bytes": 1449644
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64sve.sinc",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AARCH64sve.sinc",
+      "sha256": "a1697a874d0c4f85ec425b9aec5632f94d2cd24433343ebdf77e1b948f0b7e87",
+      "bytes": 313658
+    },
+    {
+      "source": "headless/resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AppleSilicon.ldefs",
+      "destination": "resources/processor-pack/Ghidra/Processors/AARCH64/data/languages/AppleSilicon.ldefs",
+      "sha256": "c55fd46217888d07e5ff2068a0c2ccf09b2ff9bd37e62b2c02fd60acfc87b3df",
+      "bytes": 1001
+    },
+    {
+      "source": "LICENSE",
+      "destination": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    {
+      "source": "NOTICE",
+      "destination": "NOTICE",
+      "sha256": "ad4b2bb6e75e908251226180081b5afa01c7161d7710e08b603d0c340a08a23f",
+      "bytes": 2281
+    },
+    {
+      "source": "UPSTREAM_COMMIT",
+      "destination": "UPSTREAM_COMMIT",
+      "sha256": "3613598c80953d79ce29c7564c3fc4cf34b3c7df92d1fffae02f8f80ad32ca0d",
+      "bytes": 192
+    },
+    {
+      "source": "licenses/zlib_License.txt",
+      "destination": "licenses/zlib_License.txt",
+      "sha256": "907424bb0212d095d6200b08013a4f67ff9bd74c41bd78eace5a0ef99fa0fd6b",
+      "bytes": 1029
+    },
+    {
+      "source": "docs/design/ARM64_AUTO_INDEX_DESIGN.md",
+      "destination": "docs/design/ARM64_AUTO_INDEX_DESIGN.md",
+      "sha256": "8c6e16e801cd2365a56d82444a9ebd71edef18f13255b4ddf7e97988bf40b5fe",
+      "bytes": 33008
+    },
+    {
+      "source": "docs/migration/evidence/field-schema-record-port.md",
+      "destination": "docs/reference/field-schema-record-port.md",
+      "sha256": "d56ac766b39d94d4a84ef833ecb6a7ed600d15f7369419fdabfd527fad14cb38",
+      "bytes": 2249
+    },
+    {
+      "source": "docs/migration/evidence/program-model-current-schema-port.md",
+      "destination": "docs/reference/program-model-current-schema-port.md",
+      "sha256": "cdd1aaaa95f885d10d82f696091e22bfe54c97563711955b017d07513c83d7c2",
+      "bytes": 28772
+    },
+    {
+      "source": "docs/migration/evidence/node-manager-0-7-matrix.md",
+      "destination": "docs/reference/node-manager-0-7-matrix.md",
+      "sha256": "074d172ed0c5067398a82f49126a8eb8979dedc9dca4d52d1293083cf4c5cb1d",
+      "bytes": 3366
+    },
+    {
+      "source": "docs/migration/evidence/variable-key-btree-port.md",
+      "destination": "docs/reference/variable-key-btree-port.md",
+      "sha256": "4e0db5b0528f95207e6ba07228dca40032afb83f66089f29db9468d471d1ef25",
+      "bytes": 5393
+    }
+  ]
+}

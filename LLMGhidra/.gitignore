@@ -1,0 +1,33 @@
+# Rust / native 构建产物（Cargo.lock 是桌面应用的依赖锁，必须提交）。
+**/target/
+/out/
+/build/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/compile_commands.json
+**/CMakeUserPresets.json
+
+# 本机临时任务、分析缓存、IDE 文件。
+/temp_data/
+**/analysis-cache/
+.vs/
+*.user
+*.suo
+*.log
+*.tmp
+
+# 不提交可执行文件、静态库、调试信息和待分析样本。
+*.exe
+*.dll
+*.lib
+*.obj
+*.o
+*.a
+*.pdb
+*.ilk
+*.exp
+*.so
+*.elf
+
+# processor-pack 中的 .sla 和 P-code fixtures 是版本化资源，不能忽略。

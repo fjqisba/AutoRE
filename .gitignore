@@ -1,1 +1,4 @@
 temp_data/
+
+# 历史 Ghidra/C++ 工作树仅留本机，新项目在 LLMGhidra 中维护。
+/LLMGhidra1/
