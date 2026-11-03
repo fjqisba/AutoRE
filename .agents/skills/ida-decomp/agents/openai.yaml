@@ -1,0 +1,4 @@
+interface:
+  display_name: "远程 IDA MCP"
+  short_description: "使用远程 IDA 数据库进行反编译与交叉引用分析"
+  default_prompt: "使用 $ida-pro-remote 分析已在远程 IDA MCP 中打开的数据库。"

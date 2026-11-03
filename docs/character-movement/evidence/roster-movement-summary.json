@@ -1,0 +1,520 @@
+[
+  {
+    "character": "Axeldor",
+    "controller": "Viking_Character",
+    "walks": [
+      {
+        "name": "Viking_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Thyra",
+    "controller": "Hunter_Character",
+    "walks": [
+      {
+        "name": "Hunter_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Hafgrim",
+    "controller": "Mage_Character",
+    "walks": [
+      {
+        "name": "Mage_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Helga",
+    "controller": "Yaya_Character",
+    "walks": [
+      {
+        "name": "Yaya_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Talkor",
+    "controller": "Talkor_Character",
+    "walks": [
+      {
+        "name": "Talkor_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Amaranth",
+    "controller": "Amaranth_Character",
+    "walks": [
+      {
+        "name": "Amaranth_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Hansi",
+    "controller": "Shadow_Character",
+    "walks": [
+      {
+        "name": "Shadow_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.4166666567325592,
+            "StepFront",
+            ""
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Alruna",
+    "controller": "Alruna_Character",
+    "walks": [
+      {
+        "name": "Alruna_Walk_Player_Alt",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Unn",
+    "controller": "Unn_Character",
+    "walks": [
+      {
+        "name": "Unn_Walk_Player",
+        "length": 1.0,
+        "events": []
+      }
+    ]
+  },
+  {
+    "character": "Trickster",
+    "controller": "Trickster_Character",
+    "walks": [
+      {
+        "name": "Trickster_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Vampire",
+    "controller": "Vampire_Character",
+    "walks": [
+      {
+        "name": "Vampire_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Missing",
+    "controller": "Missigno_Character",
+    "walks": [
+      {
+        "name": "Missigno_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Kaos",
+    "controller": "Kaos_Character",
+    "walks": [
+      {
+        "name": "Kaos_Walk_Player",
+        "length": 2.0,
+        "events": [
+          [
+            0.5,
+            "StepBack",
+            ""
+          ],
+          [
+            1.5,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Paladin",
+    "controller": "Paladin_Character",
+    "walks": [
+      {
+        "name": "Paladin_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Lilith",
+    "controller": "Lilith_Character",
+    "walks": [
+      {
+        "name": "Lilith_1_Walk",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      },
+      {
+        "name": "Lilith_3_Walk",
+        "length": 0.6666666865348816,
+        "events": []
+      }
+    ]
+  },
+  {
+    "character": "Gnoki",
+    "controller": "Gnoki_Character",
+    "walks": [
+      {
+        "name": "Gnoki_Walk_Player",
+        "length": 0.5833333134651184,
+        "events": [
+          [
+            0.25,
+            "StepBack",
+            ""
+          ],
+          [
+            0.25,
+            "PlayAudio",
+            "MokokoWalkPlayer"
+          ],
+          [
+            0.5833333134651184,
+            "PlayAudio",
+            "MokokoWalkPlayer"
+          ],
+          [
+            0.5833333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "character": "Vidar",
+    "controller": "Vidar_Character",
+    "walks": [
+      {
+        "name": "Vidar_Walk_Player",
+        "length": 0.8333333134651184,
+        "events": [
+          [
+            0.4166666567325592,
+            "StepBack",
+            ""
+          ],
+          [
+            0.4166666567325592,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "PlayAudio",
+            "Step"
+          ],
+          [
+            0.8333333134651184,
+            "StepFront",
+            ""
+          ]
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,6 @@
+/bin/
+/config.toml
+/pgsql/
+/runtime/
+/tls/
+

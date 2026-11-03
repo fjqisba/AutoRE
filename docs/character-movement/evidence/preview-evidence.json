@@ -1,0 +1,567 @@
+[
+  {
+    "character": "Axeldor",
+    "kind": "idle",
+    "clip": "Viking_Idle_Player",
+    "length": 1.0,
+    "sample_rate": 60.0,
+    "channels": 24,
+    "endpoint_error": 0.0,
+    "bindings": [
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        15
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        18
+      ],
+      [
+        "PlayerSprite",
+        3,
+        21
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        24
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        3,
+        30
+      ]
+    ],
+    "events": []
+  },
+  {
+    "character": "Axeldor",
+    "kind": "walk",
+    "clip": "Viking_Walk_Player",
+    "length": 0.8333333134651184,
+    "sample_rate": 60.0,
+    "channels": 42,
+    "endpoint_error": 2.0486336325120647e-05,
+    "bindings": [
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        15
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        4,
+        18
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        4,
+        21
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        24
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        30
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        33
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        3,
+        36
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        3,
+        39
+      ]
+    ],
+    "events": [
+      {
+        "time": 0.4166666567325592,
+        "functionName": "StepBack",
+        "data": "",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.4166666567325592,
+        "functionName": "PlayAudio",
+        "data": "Step",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.8333333134651184,
+        "functionName": "PlayAudio",
+        "data": "Step",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.8333333134651184,
+        "functionName": "StepFront",
+        "data": "",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      }
+    ]
+  },
+  {
+    "character": "Axeldor",
+    "kind": "dash",
+    "clip": "Viking_Dash",
+    "length": 0.25,
+    "sample_rate": 60.0,
+    "channels": 39,
+    "endpoint_error": 1.8981931965811327e-05,
+    "bindings": [
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        15
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        4,
+        18
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        4,
+        21
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        24
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        30
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        33
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        3,
+        36
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        3,
+        39
+      ]
+    ],
+    "events": []
+  },
+  {
+    "character": "Thyra",
+    "kind": "idle",
+    "clip": "Hunter_Idle_Player",
+    "length": 1.0,
+    "sample_rate": 60.0,
+    "channels": 21,
+    "endpoint_error": 0.0,
+    "bindings": [
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        15
+      ],
+      [
+        "PlayerSprite",
+        3,
+        18
+      ],
+      [
+        "PlayerSprite",
+        1,
+        21
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        24
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        30
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        3,
+        33
+      ]
+    ],
+    "events": []
+  },
+  {
+    "character": "Thyra",
+    "kind": "walk",
+    "clip": "Hunter_Walk_Player",
+    "length": 0.8333333134651184,
+    "sample_rate": 60.0,
+    "channels": 42,
+    "endpoint_error": 7.346824233422922e-06,
+    "bindings": [
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        15
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        4,
+        18
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        4,
+        21
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        24
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        30
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        33
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        3,
+        36
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        3,
+        39
+      ]
+    ],
+    "events": [
+      {
+        "time": 0.4166666567325592,
+        "functionName": "PlayAudio",
+        "data": "Step",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.4166666567325592,
+        "functionName": "StepBack",
+        "data": "",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.8333333134651184,
+        "functionName": "PlayAudio",
+        "data": "Step",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      },
+      {
+        "time": 0.8333333134651184,
+        "functionName": "StepFront",
+        "data": "",
+        "objectReferenceParameter": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "floatParameter": 0.0,
+        "intParameter": 0,
+        "messageOptions": 0
+      }
+    ]
+  },
+  {
+    "character": "Thyra",
+    "kind": "dash",
+    "clip": "Hunter_Dash",
+    "length": 0.25,
+    "sample_rate": 60.0,
+    "channels": 36,
+    "endpoint_error": 1.2632013891789029e-05,
+    "bindings": [
+      [
+        "PlayerSprite/Cabeza",
+        1,
+        0
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        1,
+        3
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        1,
+        6
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        1,
+        9
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        1,
+        12
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        1,
+        15
+      ],
+      [
+        "PlayerSprite/Cabeza",
+        4,
+        18
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        4,
+        21
+      ],
+      [
+        "PlayerSprite/Hand_Back",
+        4,
+        24
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        4,
+        27
+      ],
+      [
+        "PlayerSprite/Pierna_Back",
+        4,
+        30
+      ],
+      [
+        "PlayerSprite/Pierna_Front",
+        4,
+        33
+      ],
+      [
+        "PlayerSprite/Cuerpo",
+        3,
+        36
+      ],
+      [
+        "PlayerSprite/Hand_Front",
+        3,
+        39
+      ]
+    ],
+    "events": []
+  }
+]
