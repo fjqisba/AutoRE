@@ -7,6 +7,7 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/InstIterator.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -74,7 +75,7 @@ AffineAddress Address(llvm::Value *value) {
 
 bool IsHarmless(llvm::CallBase *call) {
   const auto *callee = call->getCalledFunction();
-  return callee && ((callee->isIntrinsic() && !call->mayWriteToMemory()) ||
+  return callee && ((callee->isIntrinsic() && (!call->mayWriteToMemory() || callee->getIntrinsicID()==llvm::Intrinsic::assume)) ||
       (callee->getName().starts_with("__remill_undefined_") && call->arg_empty()) ||
       callee->getName()=="__nereus_instruction_vip");
 }
@@ -135,7 +136,8 @@ unsigned ForwardState(llvm::Function &function) {
         if (auto *call = llvm::dyn_cast<llvm::CallBase>(instruction)) {
           auto *callee = call->getCalledFunction();
           if (!callee || (!MemoryWidth(callee->getName(), false) &&
-                          !MemoryWidth(callee->getName(), true) && !IsHarmless(call))) values.clear();
+                          !MemoryWidth(callee->getName(), true) && !IsHarmless(call)
+                          && call->mayWriteToMemory())) values.clear();
         } else if (instruction->mayWriteToMemory()) values.clear();
         continue;
       }
@@ -286,7 +288,7 @@ unsigned PromoteSnapshotReads(llvm::Function &function, const llvm::json::Array 
       auto *call=llvm::dyn_cast<llvm::CallInst>(previous);if(!call)continue;
       auto *callee=call->getCalledFunction();
       const auto store_width=callee?MemoryWidth(callee->getName(),true):0;
-      if(!store_width) {if(!IsHarmless(call) && !(callee && MemoryWidth(callee->getName(),false))) {
+      if(!store_width) {if(!IsHarmless(call) && call->mayWriteToMemory() && !(callee && MemoryWidth(callee->getName(),false))) {
         available=false;reason="unknown-call-effects";llvm::raw_string_ostream text(barrier);call->print(text);break;}continue;}
       auto destination=Address(call->getArgOperand(1));
       if(initial_rsp && destination.base==initial_rsp) continue;
@@ -314,6 +316,50 @@ unsigned PromoteSnapshotReads(llvm::Function &function, const llvm::json::Array 
 }
 
 // 仅删除在同一条直线路径上、无中间观察且被完整覆盖的 guest 写入。
+unsigned FoldFiniteSnapshotReads(llvm::Function &function,const llvm::json::Array *proofs,
+    const llvm::json::Array *facts,llvm::json::Array &used,llvm::json::Array &blocked) {
+  if(!proofs)return 0;
+  llvm::SmallVector<llvm::CallInst*> reads;
+  for(auto &instruction:llvm::instructions(function))if(auto *call=llvm::dyn_cast<llvm::CallInst>(&instruction))
+    if(call->getCalledFunction() && call->arg_size()==2 && MemoryWidth(call->getCalledFunction()->getName(),false)
+        && !llvm::isa<llvm::ConstantInt>(call->getArgOperand(1)))reads.push_back(call);
+  unsigned count=0;
+  for(auto *read:reads) {
+    const auto width=MemoryWidth(read->getCalledFunction()->getName(),false);
+    const auto id=ReadAddressId(read->getArgOperand(1),width);
+    const llvm::json::Object *proof=nullptr;
+    for(auto &item:*proofs)if(auto *object=item.getAsObject())
+      if(object->getString("id")==id && object->getBoolean("complete").value_or(false)){proof=object;break;}
+    const auto *addresses=proof?proof->getArray("addresses"):nullptr;
+    if(!addresses || addresses->empty() || addresses->size()>2)continue;
+    llvm::SmallVector<std::pair<uint64_t,llvm::ConstantInt*>> values;
+    for(auto &item:*addresses) {
+      auto address=item.getAsString();uint64_t target=0;
+      if(!address || address->getAsInteger(0,target))break;
+      // 每个可能读取地址都复用原快照替换的 memory-version/别名屏障检查。
+      auto *candidate=llvm::cast<llvm::CallInst>(read->clone());
+      candidate->setArgOperand(1,llvm::ConstantInt::get(read->getArgOperand(1)->getType(),target));
+      candidate->insertBefore(read);
+      auto *probe=new llvm::FreezeInst(candidate,"snapshot.probe",read);
+      PromoteSnapshotReads(function,facts,used,blocked);
+      auto *constant=llvm::dyn_cast<llvm::ConstantInt>(probe->getOperand(0));
+      probe->eraseFromParent();
+      if(!constant){candidate->eraseFromParent();break;}
+      values.push_back({target,constant});
+    }
+    if(values.size()!=addresses->size())continue;
+    llvm::IRBuilder<> builder(read);
+    llvm::Value *result=values.back().second;
+    for(size_t index=values.size()-1;index>0;--index) {
+      const auto [address,value]=values[index-1];
+      auto *condition=builder.CreateICmpEQ(read->getArgOperand(1),builder.getInt64(address));
+      result=builder.CreateSelect(condition,value,result,"snapshot.select");
+    }
+    read->replaceAllUsesWith(result);read->eraseFromParent();++count;
+  }
+  return count;
+}
+
 unsigned RemoveOverwrittenStores(llvm::Function &function) {
   unsigned removed = 0;
   for (auto &block : function) {
@@ -772,6 +818,21 @@ llvm::json::Array ContextReadDependencies(llvm::Function &entry) {
   return reads;
 }
 
+llvm::json::Array SnapshotReadDependencies(llvm::Function &entry) {
+  llvm::json::Array result;
+  std::set<std::pair<uint64_t,unsigned>> seen;
+  for(auto &instruction:llvm::instructions(entry)) {
+    auto *read=llvm::dyn_cast<llvm::CallInst>(&instruction);
+    if(!read || !read->getCalledFunction() || read->arg_size()!=2)continue;
+    const auto width=MemoryWidth(read->getCalledFunction()->getName(),false);
+    auto *address=llvm::dyn_cast<llvm::ConstantInt>(read->getArgOperand(1));
+    if(width && address && seen.emplace(address->getZExtValue(),width).second)
+      result.push_back(llvm::json::Object{{"address","0x"+llvm::utohexstr(address->getZExtValue(),true)},
+          {"width_bits",int64_t(width)}});
+  }
+  return result;
+}
+
 // 真正的调用者返回必须同时证明栈平衡和返回地址来自入口栈槽。
 // 单独看到 RET 或进入某个 epilogue 块都不足以宣布 VM 函数已结束。
 llvm::json::Object InspectFunctionReturn(llvm::Function &entry) {
@@ -810,10 +871,29 @@ llvm::json::Object InspectFunctionReturn(llvm::Function &entry) {
   const bool caller_slot=read && read->getCalledFunction()
       && MemoryWidth(read->getCalledFunction()->getName(),false)==64
       && slot.base==initial_rsp && slot.offset==0;
+  bool intact=caller_slot;
+  // 入口槽地址相同仍不代表原返回地址：必须排除 token 链上的覆盖和未知别名。
+  if(caller_slot) {
+    llvm::Value *token=read->getArgOperand(0);
+    std::set<llvm::Value*> visited;
+    while(token!=entry.getArg(2)) {
+      if(!visited.insert(token).second){intact=false;break;}
+      auto *write=llvm::dyn_cast<llvm::CallInst>(token);
+      const auto width=write && write->getCalledFunction()
+          ?MemoryWidth(write->getCalledFunction()->getName(),true):0;
+      if(!width || write->arg_size()!=3){intact=false;break;}
+      const auto address=Address(write->getArgOperand(1));
+      if(address.base!=initial_rsp || uint64_t(0-address.offset)<width/8 || address.offset<8){
+        intact=false;break;
+      }
+      token=write->getArgOperand(0);
+    }
+  }
   result["native_ret"]=true;result["caller_stack_restored"]=balanced;
   result["target_from_entry_return_slot"]=caller_slot;
+  result["entry_return_slot_intact"]=intact;
   if(final.base==initial_rsp)result["final_rsp_offset_from_entry"]=int64_t(final.offset);
-  result["is_caller_return"]=balanced && caller_slot;
+  result["is_caller_return"]=balanced && caller_slot && intact;
   std::string text;llvm::raw_string_ostream stream(text);return_target->print(stream);
   result["target_expression"]=stream.str();
   result["scope"]="current-path-normal-completion-stack-and-return-slot";
@@ -886,6 +966,28 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
   if (!module) return Error("IR_INVALID", "cannot parse local bitcode");
   auto *function = module->getFunction(*name);
   if (!function || function->isDeclaration()) return Error("IR_INVALID", "entry function missing");
+  if(auto *conditions=request.getArray("memory_path_conditions"))for(auto &item:*conditions) {
+    const auto *condition=item.getAsObject();if(!condition)continue;
+    auto text=condition->getString("address");const auto width=condition->getInteger("width").value_or(64);
+    const auto zero=condition->getBoolean("zero");const auto ordinal=condition->getInteger("occurrence").value_or(0);
+    uint64_t address=0;if(!text || text->getAsInteger(0,address) || !zero || ordinal<0)continue;
+    const auto id=text->str()+":"+std::to_string(width)+":"+std::to_string(ordinal)+(*zero?":zero":":nonzero");
+    const auto key="nereus.path."+id;
+    if(function->getMetadata(key))continue;
+    int64_t seen=0;llvm::CallInst *read=nullptr;
+    for(auto &instruction:llvm::instructions(*function))if(auto *call=llvm::dyn_cast<llvm::CallInst>(&instruction)) {
+      auto *callee=call->getCalledFunction();
+      auto *location=call->arg_size()==2?llvm::dyn_cast<llvm::ConstantInt>(call->getArgOperand(1)):nullptr;
+      if(callee && MemoryWidth(callee->getName(),false)==width && location && location->getZExtValue()==address)
+        if(seen++==ordinal){read=call;break;}
+    }
+    if(!read)return Error("PATH_CONDITION_UNAVAILABLE","condition read missing from current prefix");
+    llvm::IRBuilder<> builder(read->getNextNode());
+    auto *predicate=builder.CreateICmpEQ(read,llvm::ConstantInt::get(read->getType(),0));
+    if(!*zero)predicate=builder.CreateNot(predicate);
+    builder.CreateCall(llvm::Intrinsic::getDeclaration(module.get(),llvm::Intrinsic::assume),{predicate});
+    function->setMetadata(key,llvm::MDNode::get(context,llvm::MDString::get(context,id)));
+  }
   function->setMetadata("nereus.observation", llvm::MDNode::get(context, {
       llvm::MDString::get(context, "normal-completion-state-and-guest-memory"),
       llvm::MDString::get(context, "guest-memory-is-disjoint-from-remill-State"),
@@ -922,7 +1024,7 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
   std::string error;
   const auto pipeline = "function(early-cse<memssa>,instcombine,gvn,dse,adce,simplifycfg),globaldce";
   if (!RunPipeline(*module, pipeline, error)) return Error("IR_INVALID", error);
-  unsigned forwarded = 0, state_reads = 0, dead_writes = 0, iterations = 0;
+  unsigned forwarded = 0, state_reads = 0, dead_writes = 0, iterations = 0, normalized_stack = 0,finite_reads=0;
   unsigned promoted=0;llvm::json::Array used_snapshot,blocked_snapshot,iteration_history;
   // 比较完整表示，不使用指令数或自定义 pass 命中数作为收敛条件。
   // LLVM 自身仍可能在自定义 pass 无命中时继续折叠表达式、规范化栈地址。
@@ -934,6 +1036,7 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
     llvm::json::Value state(llvm::json::Object{
         {"initialization", InspectInitialization(*function)},
         {"branch", AnalyzeBranch(*function)},
+        {"function_return", InspectFunctionReturn(*function)},
         {"context_reads", ContextReadDependencies(*function)}});
     std::string text; llvm::raw_string_ostream stream(text);
     stream << state; return stream.str();
@@ -952,8 +1055,12 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
   while (iterations < iteration_budget) {
     const auto state_changes = ForwardState(*function);
     if (!RunPipeline(*module, pipeline, error)) return Error("IR_INVALID", error);
+    const auto stack_changes = NormalizeStackAddresses(*function,request.getArray("stack_address_proofs"));
+    normalized_stack += stack_changes;
     const auto reads = ForwardReads(*function);
     const auto constants=PromoteSnapshotReads(*function,request.getArray("image_facts"),used_snapshot,blocked_snapshot);
+    const auto finite=FoldFiniteSnapshotReads(*function,request.getArray("finite_read_proofs"),request.getArray("image_facts"),used_snapshot,blocked_snapshot);
+    finite_reads+=finite;
     promoted+=constants;
     const auto writes = RemoveOverwrittenStores(*function);
     forwarded += reads; dead_writes += writes;
@@ -968,6 +1075,8 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
         {"iteration",int64_t(iterations)}, {"ir_changed",ir_changed},
         {"state_changed",state_changed}, {"ir_sha256",ir_hash}, {"state_sha256",state_hash},
         {"instructions",Count(*function)}, {"state_reads_forwarded",state_changes},
+        {"stack_addresses_normalized",stack_changes},
+        {"finite_snapshot_reads_folded",finite},
         {"guest_reads_forwarded",reads}, {"snapshot_reads_promoted",constants},
         {"overwritten_guest_writes_removed",writes}});
     if (!ir_changed && !state_changed) {
@@ -984,11 +1093,26 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
   auto branch_analysis=AnalyzeBranch(*function);
   auto function_return=InspectFunctionReturn(*function);
   auto context_reads=ContextReadDependencies(*function);
+  auto snapshot_reads=SnapshotReadDependencies(*function);
+  auto stack_candidates=AnalyzeStackAddresses(*function);
+  auto read_addresses=AnalyzeReadAddresses(*function);
   if(promoted){
     function->setMetadata("nereus.image.snapshot",llvm::MDNode::get(context,{
         llvm::MDString::get(context,"readonly-PE-preferred-base-snapshot"),
         llvm::MDString::get(context,"entry-stack-disjoint-from-image"),
         llvm::MDString::get(context,"runtime-image-equals-supplied-snapshot-at-promoted-addresses")}));
+  }
+  // 下轮追加使用尚未抽取 helper 的稳定表示，保留同一 State/memory 语义链。
+  const auto checkpoint_path=std::filesystem::u8path(directory->str())/"block.fixed-point.bc";
+  std::error_code checkpoint_error;
+  if(converged) {
+    llvm::raw_fd_ostream checkpoint(checkpoint_path.string(),checkpoint_error,llvm::sys::fs::OF_None);
+    if(checkpoint_error)return Error("OUTPUT_ERROR",checkpoint_error.message());
+    llvm::WriteBitcodeToFile(*module,checkpoint);checkpoint.close();
+    if(checkpoint.has_error())return Error("OUTPUT_ERROR","fixed-point checkpoint write failed");
+  } else {
+    std::filesystem::remove(checkpoint_path,checkpoint_error);
+    if(checkpoint_error)return Error("OUTPUT_ERROR",checkpoint_error.message());
   }
   const auto outlined_helpers = OutlineFlags(*function);
   if (!RunPipeline(*module, "function(dce),globaldce", error)) return Error("IR_INVALID", error);
@@ -1015,6 +1139,11 @@ llvm::json::Object OptimizeLocalBlock(const llvm::json::Object &request) {
       {"branch_analysis",std::move(branch_analysis)},
       {"function_return",std::move(function_return)},
       {"context_read_dependencies",std::move(context_reads)},
+      {"snapshot_read_dependencies",std::move(snapshot_reads)},
+      {"stack_address_candidates",std::move(stack_candidates)},
+      {"stack_addresses_normalized",normalized_stack},
+      {"finite_snapshot_reads_folded",finite_reads},
+      {"symbolic_read_addresses",std::move(read_addresses)},
       {"instruction_vips",std::move(instruction_vips)},
       {"instructions_before_outlining", optimized_before_outline}, {"outlined_flag_helpers", outlined_helpers},
       {"total_instructions_including_helpers", total_instructions},

@@ -55,6 +55,54 @@ fn statistics(context: &VmContext) -> Value {
     metadata["prepared"]["optimization"].clone()
 }
 
+#[test]
+fn smt_proves_stack_mba_before_forwarding_and_rejects_non_affine_address() {
+    // 真实前沿同形：X=RSP-b20h，((X+10000h)&158h)|X == X。
+    let context = initialize(
+        "proven-stack-mba",
+        concat!(
+            "48c7842438f6ffff34120000",
+            "488d8424e0f4ffff",
+            "488d8c24e0f40000",
+            "4881e158010000",
+            "4809c1",
+            "4881c158010000",
+            "488b11",
+            "ffe2"
+        ),
+    );
+    assert_eq!(context.initialization["next_target"], "0x1234");
+    let stats = statistics(&context);
+    assert!(stats["stack_addresses_normalized"].as_u64().unwrap() > 0);
+    let progress: Value = serde_json::from_slice(
+        &fs::read(context.output_dir.join("optimization.progress.json")).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        progress["stack_address_proofs"]
+            .as_object()
+            .unwrap()
+            .values()
+            .any(|proof| proof["status"] == "unsat")
+    );
+
+    // RSP&~15 依赖低位；不能将 RSP=0 的候选偏移误当成对所有 RSP 成立。
+    let rejected = initialize("non-affine-stack", "4889e14883e1f0488b11ffe2");
+    let progress: Value = serde_json::from_slice(
+        &fs::read(rejected.output_dir.join("optimization.progress.json")).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        progress["stack_address_proofs"]
+            .as_object()
+            .unwrap()
+            .values()
+            .any(|proof| proof["status"] == "sat")
+    );
+    assert_eq!(statistics(&rejected)["stack_addresses_normalized"], 0);
+    assert_eq!(rejected.initialization["unique_target_resolved"], false);
+}
+
 fn validate(context: &VmContext, candidate: &Path) -> anyhow::Result<Value> {
     let mut worker = Worker::spawn(&root().join("toolchains/bin/nereus-remill-worker.exe"))?;
     worker.request(json!({
@@ -193,7 +241,12 @@ fn local_snapshot_propagation_reaches_fixed_point_and_reports_budget_exhaustion(
     assert_eq!(last["state_changed"], false);
     // 最后一轮恰好达到稳定仍为成功，不能按 iterations >= budget 误报耗尽。
     request["iteration_budget"] = stable["iterations"].clone();
-    let exact = worker.request(request).unwrap();
+    let exact = worker.request(request.clone()).unwrap();
     assert_eq!(exact["converged"], true);
     assert_eq!(exact["iteration_budget_exhausted"], false);
+    assert!(context.output_dir.join("block.fixed-point.bc").is_file());
+    request["iteration_budget"] = 8.into();
+    let limited_again = worker.request(request).unwrap();
+    assert_eq!(limited_again["converged"], false);
+    assert!(!context.output_dir.join("block.fixed-point.bc").exists());
 }

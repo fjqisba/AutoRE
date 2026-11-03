@@ -6,6 +6,10 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/SHA256.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/ModRef.h>
@@ -21,6 +25,7 @@
 #include <set>
 #include "local_optimizer.h"
 #include "local_validation.h"
+#include "branch_analysis.h"
 
 namespace {
 constexpr int64_t kProtocolVersion = 1;
@@ -82,7 +87,7 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
   if (!arch) return Error("UNSUPPORTED_ARCHITECTURE", "Remill architecture unavailable");
   auto module = remill::LoadArchSemantics(arch.get(), {semantics_path});
   remill::IntrinsicTable intrinsics(module.get());
-  const std::string function_name = lift_block
+  std::string function_name = lift_block
       ? "nereus_bb_" + llvm::utohexstr(pc, true) : "nereus_lifted_instruction";
   auto function = arch->DefineLiftedFunction(function_name, module.get());
   // 寄存器临时变量名可能被 LLVM 消除，布局信息必须来自 Remill，而不是靠变量名猜偏移。
@@ -164,7 +169,7 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
       auto lifter=arch->DefaultLifter(intrinsics);
       auto *state=remill::NthArgument(function,remill::kStatePointerArgNum);
       llvm::SmallVector<llvm::Value*,19> values{
-          llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),index),
+          llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),index+request.getInteger("instruction_ordinal_base").value_or(0)),
           llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),instruction_pc),
           remill::LoadMemoryPointer(block,intrinsics)};
       for(const auto *name:{"RAX","RBX","RCX","RDX","RSP","RBP","RSI","RDI","R8","R9","R10","R11","R12","R13","R14","R15"}){
@@ -244,6 +249,60 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
         }
       }
     }
+  }
+  if(auto prefix_path=request.getString("prefix_bitcode")) {
+    const auto prefix_name=request.getString("prefix_function");
+    if(!prefix_name)return Error("INVALID_REQUEST","prefix_function required");
+    llvm::SMDiagnostic prefix_diagnostic;
+    auto prefix_module=llvm::parseIRFile(*prefix_path,prefix_diagnostic,context);
+    auto *prefix=prefix_module?prefix_module->getFunction(*prefix_name):nullptr;
+    if(!prefix || prefix->size()!=1)return Error("PREFIX_INVALID","single-path fixed-point prefix required");
+    // opt 会补充 AS270/271/272 的目标布局；普通 guest/State 指针布局须保持一致。
+    if(prefix_module->getTargetTriple()!=module->getTargetTriple()
+        || prefix_module->getDataLayout().getPointerSizeInBits()!=module->getDataLayout().getPointerSizeInBits()
+        || prefix_module->getDataLayout().getTypeAllocSize(arch->StateStructType())
+            !=module->getDataLayout().getTypeAllocSize(arch->StateStructType()))
+      return Error("PREFIX_LAYOUT_MISMATCH","prefix target/State layout mismatch");
+    module->setDataLayout(prefix_module->getDataLayout());
+    llvm::CallInst *exit=nullptr;
+    for(auto &item:prefix->getEntryBlock())if(auto *call=llvm::dyn_cast<llvm::CallInst>(&item))
+      if(call->getCalledFunction() && (call->getCalledFunction()->getName()=="__remill_jump"
+          || call->getCalledFunction()->getName()=="__remill_function_call"
+          || call->getCalledFunction()->getName()=="__remill_function_return")) {
+        if(exit)return Error("PREFIX_INVALID","multiple prefix exits");exit=call;
+      }
+    auto *next=exit?llvm::dyn_cast<llvm::ConstantInt>(exit->getArgOperand(1)):nullptr;
+    if(next && next->getZExtValue()!=pc)return Error("PREFIX_TARGET_MISMATCH","prefix target differs from appended entry");
+    if(!next) {
+      const auto expected=request.getString("prefix_target_model_sha256");
+      const auto proven=request.getString("prefix_unique_target");uint64_t target=0;
+      auto model=AnalyzeBranch(*prefix);auto smt=model.getString("smt2");
+      if(!exit || !expected || !proven || proven->getAsInteger(0,target) || target!=pc || !smt)
+        return Error("PREFIX_TARGET_MISMATCH","symbolic prefix requires a matching unique-target proof");
+      const auto hash=llvm::SHA256::hash(llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(smt->data()),smt->size()));
+      if(llvm::toHex(llvm::ArrayRef<uint8_t>(hash),true)!=*expected)
+        return Error("PREFIX_PROOF_MISMATCH","unique-target model does not match current prefix IR");
+    }
+    exit->replaceAllUsesWith(exit->getArgOperand(2));exit->eraseFromParent();
+    const auto prefix_symbol="__nereus_prefix";
+    prefix->setName(prefix_symbol);
+    prefix->removeFnAttr(llvm::Attribute::NoInline);prefix->removeFnAttr(llvm::Attribute::OptimizeNone);
+    prefix->addFnAttr(llvm::Attribute::AlwaysInline);
+    function->setName("__nereus_append");
+    function->removeFnAttr(llvm::Attribute::NoInline);function->removeFnAttr(llvm::Attribute::OptimizeNone);
+    function->addFnAttr(llvm::Attribute::AlwaysInline);
+    if(llvm::Linker::linkModules(*module,std::move(prefix_module)))return Error("PREFIX_INVALID","cannot link prefix");
+    prefix=module->getFunction(prefix_symbol);
+    auto *wrapper=llvm::Function::Create(function->getFunctionType(),llvm::GlobalValue::ExternalLinkage,*prefix_name,module.get());
+    wrapper->getArg(0)->setName("state");wrapper->getArg(1)->setName("pc");wrapper->getArg(2)->setName("memory");
+    for(auto metadata:{"nereus.rsp.layout","nereus.gpr.layout","nereus.observation","nereus.image.snapshot"})
+      if(auto *node=prefix->getMetadata(metadata))wrapper->setMetadata(metadata,node);
+    auto *entry=llvm::BasicBlock::Create(context,"entry",wrapper);
+    llvm::IRBuilder<> builder(entry);
+    auto *memory=builder.CreateCall(prefix,{wrapper->getArg(0),wrapper->getArg(1),wrapper->getArg(2)});
+    auto *result=builder.CreateCall(function,{wrapper->getArg(0),llvm::ConstantInt::get(intrinsics.pc_type,pc),memory});
+    builder.CreateRet(result);
+    function=wrapper;function_name=prefix_name->str();
   }
   std::string diagnostic;
   llvm::raw_string_ostream diagnostics(diagnostic);

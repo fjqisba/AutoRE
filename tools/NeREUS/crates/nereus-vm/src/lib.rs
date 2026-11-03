@@ -43,6 +43,7 @@ pub struct FunctionAnalysisOptions {
     pub max_instructions: usize,
     pub max_bytes: usize,
     pub resume_from: Option<PathBuf>,
+    pub memory_path_conditions: Vec<Value>,
 }
 impl Default for FunctionAnalysisOptions {
     fn default() -> Self {
@@ -51,6 +52,7 @@ impl Default for FunctionAnalysisOptions {
             max_instructions: 32768,
             max_bytes: 131072,
             resume_from: None,
+            memory_path_conditions: Vec::new(),
         }
     }
 }
@@ -100,6 +102,12 @@ impl VmSession {
             output_dir.join("context.json"),
             b"{\"status\":\"initializing\"}\n",
         )?;
+        for artifact in ["initialization.error.json", "function-analysis.json"] {
+            let path = output_dir.join(artifact);
+            if path.is_file() {
+                fs::remove_file(path)?;
+            }
+        }
         let mut blocks: Vec<DecodedBlock> = Vec::new();
         let mut chain = Vec::new();
         let mut history = Vec::new();
@@ -109,9 +117,28 @@ impl VmSession {
         let mut image_facts = std::collections::BTreeMap::<u64, Vec<u8>>::new();
         let mut vip = VipTracker::default();
         let mut graph = SemanticGraph::default();
+        let mut resume_prefix_dir = None;
+        let mut path_conditions = options
+            .map(|options| options.memory_path_conditions.clone())
+            .unwrap_or_default();
         if let Some(checkpoint) = options.and_then(|options| options.resume_from.as_ref()) {
             let saved: Value =
                 serde_json::from_slice(&fs::read(checkpoint.join("state-machine.json"))?)?;
+            for condition in saved["memory_path_conditions"]
+                .as_array()
+                .into_iter()
+                .flatten()
+            {
+                if !path_conditions.contains(condition) {
+                    path_conditions.push(condition.clone());
+                }
+            }
+            anyhow::ensure!(
+                saved["blocks"]
+                    .as_array()
+                    .is_some_and(|blocks| !blocks.is_empty()),
+                "CHECKPOINT_EMPTY: 无可恢复的已提交基本块"
+            );
             let digest = hex::encode(Sha256::digest(&self.module_bytes));
             let facts: Value = serde_json::from_slice(&fs::read(
                 checkpoint
@@ -143,6 +170,10 @@ impl VmSession {
                     .collect::<std::result::Result<Vec<_>, _>>()?
                     .concat();
                 anyhow::ensure!(
+                    bytes.len() <= mapped.available_raw_bytes,
+                    "CHECKPOINT_BLOCK_UNMAPPED"
+                );
+                anyhow::ensure!(
                     self.module_bytes[mapped.file_offset..mapped.file_offset + bytes.len()]
                         == bytes,
                     "CHECKPOINT_BYTES_MISMATCH: 0x{:X}",
@@ -172,13 +203,61 @@ impl VmSession {
                     hex::decode(fact["bytes"].as_str().context("快照字节缺失")?)?,
                 );
             }
-            target = parse_address(&saved["initialization"]["next_target"])?;
+            if saved["initialization"]["unique_target_resolved"] == true {
+                target = parse_address(&saved["initialization"]["next_target"])?;
+            } else {
+                // 新增化简/证明规则后允许重分析最后一个未解析前沿，保留此前证据。
+                let frontier = blocks.pop().context("检查点缺少待重分析块")?;
+                chain.pop();
+                history.pop();
+                target = frontier.start_pc;
+                let id = graph
+                    .nodes
+                    .iter()
+                    .find(|(_, node)| {
+                        node["status"] == "analyzed"
+                            && node["instructions"]
+                                .as_array()
+                                .and_then(|rows| rows.first())
+                                .and_then(|row| row["ordinal"].as_u64())
+                                == Some(
+                                    blocks
+                                        .iter()
+                                        .map(|block| block.instructions.len())
+                                        .sum::<usize>() as u64,
+                                )
+                    })
+                    .map(|(id, _)| id.clone());
+                if let Some(id) = id {
+                    if let Some(node) = graph.nodes.remove(&id) {
+                        visited.remove(&serde_json::from_value::<SemanticAddress>(
+                            node["semantic_address"].clone(),
+                        )?);
+                    }
+                    graph.edges.retain(|edge| edge["source"] != id);
+                }
+            }
+        }
+        if let Some(checkpoint) = options.and_then(|options| options.resume_from.as_ref()) {
+            if !blocks.is_empty() {
+                let candidate = checkpoint.join(format!("rounds/{:02}", blocks.len() - 1));
+                if candidate.join("block.fixed-point.bc").is_file() {
+                    let evidence: Value =
+                        serde_json::from_slice(&fs::read(candidate.join("image-facts.json"))?)?;
+                    anyhow::ensure!(
+                        evidence["input_sha256"] == hex::encode(Sha256::digest(&self.module_bytes)),
+                        "CHECKPOINT_PREFIX_MODULE_MISMATCH"
+                    );
+                    resume_prefix_dir = Some(candidate);
+                }
+            }
         }
         let max_blocks = options.map_or(32, |options| options.max_blocks);
         let max_instructions = options.map_or(4096, |options| options.max_instructions);
         let max_bytes = options.map_or(16384, |options| options.max_bytes);
         let mut worker = Worker::spawn(&self.root.join("toolchains/bin/nereus-remill-worker.exe"))?;
-        for round in blocks.len()..max_blocks {
+        let starting_round = blocks.len();
+        for round in starting_round..max_blocks {
             eprintln!(
                 "NeREUS block {round}: RIP=0x{target:X}, VIP=0x{:X}",
                 vip.current.unwrap_or(0)
@@ -187,7 +266,7 @@ impl VmSession {
                 eip: target,
                 vip: vip.current,
             };
-            if !visited.insert(semantic_address.clone()) {
+            if !visited.insert(semantic_address.clone()) && options.is_none() {
                 return initialization_error(
                     &output_dir,
                     "INITIALIZATION_CYCLE",
@@ -258,12 +337,66 @@ impl VmSession {
                 ends.push(lengths.len());
             }
             // 从入口重新提升已确认链，共用一个 State 和 memory token；不会拼接互不关联的块函数。
-            let lift_request = json!({
+            let full_lift_request = json!({
                 "op": "lift-block", "architecture": "amd64", "pc": format!("0x{vm_entry:x}"),
                 "bytes": bytes, "instruction_lengths": lengths, "instruction_pcs": pcs,
                 "block_end_indices": ends, "output_dir": round_dir,
                 "semantics_dir": self.root.join("toolchains/remill-install/share/remill/17/semantics")
             });
+            let mut lift_request = full_lift_request.clone();
+            let previous_round = if round == starting_round && resume_prefix_dir.is_some() {
+                resume_prefix_dir.clone().context("prefix 缺失")?
+            } else {
+                output_dir.join(format!("rounds/{:02}", round.saturating_sub(1)))
+            };
+            let use_prefix = options.is_some()
+                && (round > starting_round || resume_prefix_dir.is_some())
+                && previous_round.join("block.fixed-point.bc").is_file()
+                && fs::read(previous_round.join("branch.classification.json"))
+                    .ok()
+                    .and_then(|data| serde_json::from_slice::<Value>(&data).ok())
+                    .is_some_and(|branch| {
+                        branch["kind"] == "direct" && branch["target_set_complete"] == true
+                    });
+            if use_prefix {
+                let current = blocks.last().context("缺少追加块")?;
+                lift_request["pc"] = format!("0x{target:x}").into();
+                lift_request["bytes"] = chain.last().context("缺少追加块字节")?["bytes"].clone();
+                lift_request["instruction_lengths"] = json!(
+                    current
+                        .instructions
+                        .iter()
+                        .map(|item| item.instruction.length)
+                        .collect::<Vec<_>>()
+                );
+                lift_request["instruction_pcs"] = json!(
+                    current
+                        .instructions
+                        .iter()
+                        .map(|item| format!("0x{:x}", item.instruction.pc))
+                        .collect::<Vec<_>>()
+                );
+                lift_request["block_end_indices"] = json!([current.instructions.len()]);
+                lift_request["prefix_bitcode"] =
+                    serde_json::to_value(previous_round.join("block.fixed-point.bc"))?;
+                lift_request["prefix_function"] = format!("nereus_bb_{vm_entry:x}").into();
+                lift_request["prefix_unique_target"] = format!("0x{target:x}").into();
+                if let Ok(model) = fs::read(previous_round.join("branch.target.smt2")) {
+                    lift_request["prefix_target_model_sha256"] =
+                        hex::encode(Sha256::digest(model)).into();
+                }
+                lift_request["instruction_ordinal_base"] =
+                    (instruction_count - current.instructions.len()).into();
+                fs::write(
+                    round_dir.join("composition.json"),
+                    serde_json::to_vec_pretty(&json!({
+                    "mode":"fixed-point-prefix-plus-native-block","prefix":previous_round.join("block.fixed-point.bc"),
+                    "prefix_sha256":hex::encode(Sha256::digest(fs::read(previous_round.join("block.fixed-point.bc"))?)),
+                    "appended_block":format!("0x{target:X}"),"new_instructions":current.instructions.len(),
+                    "total_native_instructions":instruction_count,"caller_state_and_memory_shared":true,
+                    "input_sha256":hex::encode(Sha256::digest(&self.module_bytes))}))?,
+                )?;
+            }
             let lifted = worker.request(lift_request.clone())?;
             let function = lifted["function_name"]
                 .as_str()
@@ -275,6 +408,7 @@ impl VmSession {
                 Some((&self.image, &self.module_bytes)),
                 &mut image_facts,
                 None,
+                &path_conditions,
             ) {
                 Ok(prepared) => prepared,
                 Err(error) => {
@@ -320,7 +454,21 @@ impl VmSession {
             if let Some(seed) = vip.stream_base {
                 let trace_dir = round_dir.join("instruction-vip-trace");
                 fs::create_dir_all(&trace_dir)?;
-                let mut request = lift_request.clone();
+                let trace_prefix =
+                    previous_round.join("instruction-vip-trace/block.fixed-point.bc");
+                let mut request = if use_prefix && trace_prefix.is_file() {
+                    let mut request = lift_request.clone();
+                    request["prefix_bitcode"] = serde_json::to_value(trace_prefix)?;
+                    if let Ok(model) =
+                        fs::read(previous_round.join("instruction-vip-trace/branch.target.smt2"))
+                    {
+                        request["prefix_target_model_sha256"] =
+                            hex::encode(Sha256::digest(model)).into();
+                    }
+                    request
+                } else {
+                    full_lift_request.clone()
+                };
                 request["trace_instruction_vip"] = true.into();
                 request["trace_seed_register"] = vip
                     .evidence
@@ -341,6 +489,7 @@ impl VmSession {
                     Some(
                         json!({"stream_base":format!("0x{seed:x}"),"cursor_slot_from_entry_rsp":vip.cursor_slot_from_entry_rsp}),
                     ),
+                    &path_conditions,
                 )?;
                 let rows = trace_prepared["optimization"]["instruction_vips"]
                     .as_array()
@@ -351,6 +500,12 @@ impl VmSession {
                         "INSTRUCTION_VIP_TRACE_INCOMPLETE: expected {expected}, got {}",
                         rows.len()
                     );
+                }
+                // 条件游标写入尚未分路径时，不得继续沿用上一条已知 VIP 伪装确定值。
+                if rows.last().is_some_and(|row| {
+                    row["vip_initialized"] == true && row["vip_resolved"] == false
+                }) {
+                    vip.current = None;
                 }
                 graph.apply_instruction_vips(rows, vip.current)?;
                 let current_start: usize = blocks
@@ -466,6 +621,7 @@ impl VmSession {
                 output_dir.join("state-machine.json"),
                 serde_json::to_vec_pretty(&json!({
                     "entry": vm_entry, "stage": evidence["stage"], "initialization_complete": false,
+                    "memory_path_conditions":path_conditions,
                     "blocks": blocks, "transitions": transitions, "initialization": evidence, "prepared": prepared,
                     "vip":vip,"semantic_graph":graph,
                     "observation_model": "normal-completion-state-and-guest-memory"
@@ -481,6 +637,7 @@ impl VmSession {
                     "entry":format!("0x{vm_entry:X}"),"native_ret":format!("0x{:X}",current_block.instructions.last().context("RET 缺失")?.instruction.pc),
                     "vip":format!("0x{:X}",vip.current.unwrap_or(0)),"blocks":blocks.len(),
                     "return_proof":prepared["optimization"]["function_return"],"initialization_complete":false,
+                    "memory_path_conditions":path_conditions,
                     "input_sha256":hex::encode(Sha256::digest(&self.module_bytes))});
                 fs::write(
                     output_dir.join("function-analysis.json"),
@@ -750,6 +907,7 @@ pub fn prepare_block_il(root: &Path, output: &Path, function: &str) -> Result<Va
         None,
         &mut std::collections::BTreeMap::new(),
         None,
+        &[],
     )
 }
 
@@ -760,6 +918,7 @@ fn prepare_block_il_with_snapshot(
     snapshot: Option<(&PeImage, &[u8])>,
     facts: &mut std::collections::BTreeMap<u64, Vec<u8>>,
     trace_config: Option<Value>,
+    memory_path_conditions: &[Value],
 ) -> Result<Value> {
     let local: Value = serde_json::from_slice(&fs::read(root.join("toolchains/local.json"))?)?;
     let bin = PathBuf::from(local["llvm_root"].as_str().context("未配置 LLVM")?).join("bin");
@@ -804,15 +963,24 @@ fn prepare_block_il_with_snapshot(
     let mut previous = None;
     let mut seen = std::collections::BTreeSet::new();
     let mut iteration_history = Vec::new();
+    let mut stack_proofs = std::collections::BTreeSet::<String>::new();
+    let mut stack_queries = std::collections::BTreeMap::<String, Value>::new();
+    let mut finite_reads = std::collections::BTreeMap::<String, Value>::new();
+    let mut read_queries = std::collections::BTreeMap::<String, Value>::new();
     let mut converged = false;
     let mut stop_reason = "iteration-budget-exhausted";
     // 上限只保护资源；达到上限或出现振荡都不能当成成功的稳定状态。
     const SNAPSHOT_ITERATION_BUDGET: usize = 256;
     for iteration in 1..=SNAPSHOT_ITERATION_BUDGET {
         let input_facts = facts.clone();
+        let previous_proofs = stack_proofs.clone();
+        let previous_finite = finite_reads.clone();
         optimization=optimizer.request(json!({"op":"optimize-local","input_bitcode":lifted,
             "output_dir":output,"function_name":function,
             "image_facts":facts.iter().map(|(address,bytes)|json!({"address":format!("0x{address:x}"),"bytes":hex::encode(bytes)})).collect::<Vec<_>>(),
+            "stack_address_proofs":stack_proofs,
+            "finite_read_proofs":finite_reads.values().collect::<Vec<_>>(),
+            "memory_path_conditions":memory_path_conditions,
             "vip_trace":trace_config}))?;
         if optimization["converged"] != true {
             stop_reason = "worker-not-converged";
@@ -820,7 +988,70 @@ fn prepare_block_il_with_snapshot(
                 "worker_stop_reason":optimization["stop_reason"]}));
             break;
         }
+        if let Some(candidates) = optimization["stack_address_candidates"].as_array() {
+            for candidate in candidates {
+                let id = candidate["id"].as_str().context("栈地址证明 ID 缺失")?;
+                if stack_queries.contains_key(id) {
+                    continue;
+                }
+                let smt = candidate["smt2"].as_str().context("栈地址证明公式缺失")?;
+                let proof_dir = output.join("stack-proofs");
+                fs::create_dir_all(&proof_dir)?;
+                fs::write(proof_dir.join(format!("{id}.smt2")), smt)?;
+                let status = branch::solve(root, smt)?;
+                fs::write(proof_dir.join(format!("{id}.result.txt")), &status)?;
+                if status.trim() == "unsat" {
+                    stack_proofs.insert(id.to_owned());
+                }
+                stack_queries.insert(
+                    id.to_owned(),
+                    json!({"candidate":candidate,"status":status.trim()}),
+                );
+            }
+        }
         if let Some((image, bytes)) = snapshot {
+            for candidate in optimization["symbolic_read_addresses"]
+                .as_array()
+                .into_iter()
+                .flatten()
+            {
+                let id = candidate["id"].as_str().context("读取地址证明 ID 缺失")?;
+                if read_queries.contains_key(id) {
+                    continue;
+                }
+                let proof_dir = output.join("read-address-proofs").join(id);
+                fs::create_dir_all(&proof_dir)?;
+                let classification = branch::classify(root, &proof_dir, candidate)?;
+                fs::write(
+                    proof_dir.join("classification.json"),
+                    serde_json::to_vec_pretty(&classification)?,
+                )?;
+                if classification["target_set_complete"] == true {
+                    let width =
+                        candidate["width_bits"].as_u64().context("读取位宽缺失")? as usize / 8;
+                    let mut available = true;
+                    for address in classification["targets"]
+                        .as_array()
+                        .context("地址集合缺失")?
+                    {
+                        let target = parse_address(address)?;
+                        if let Ok(data) = image.readonly_snapshot(bytes, target, width) {
+                            if !facts.get(&target).is_some_and(|old| old.len() >= width) {
+                                facts.insert(target, data);
+                            }
+                        } else {
+                            available = false;
+                        }
+                    }
+                    if available {
+                        finite_reads.insert(
+                            id.to_owned(),
+                            json!({"id":id,"complete":true,"addresses":classification["targets"]}),
+                        );
+                    }
+                }
+                read_queries.insert(id.to_owned(), classification);
+            }
             if let Some(exits) = optimization["initialization"]["exits"].as_array() {
                 for exit in exits {
                     if let Some(reads) = exit["blocking_memory_reads"].as_array() {
@@ -847,8 +1078,12 @@ fn prepare_block_il_with_snapshot(
                     }
                 }
             }
-            if let Some(reads) = optimization["context_read_dependencies"].as_array() {
-                for read in reads {
+            for dependency_kind in ["context_read_dependencies", "snapshot_read_dependencies"] {
+                for read in optimization[dependency_kind]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                {
                     let (Some(address), Some(width)) =
                         (read["address"].as_str(), read["width_bits"].as_u64())
                     else {
@@ -874,7 +1109,8 @@ fn prepare_block_il_with_snapshot(
         let state = json!({"initialization":optimization["initialization"],
             "branch":optimization["branch_analysis"],
             "context_reads":optimization["context_read_dependencies"],
-            "instruction_vips":optimization["instruction_vips"],"facts":facts});
+            "function_return":optimization["function_return"],
+            "instruction_vips":optimization["instruction_vips"],"facts":facts,"stack_proofs":stack_proofs,"finite_reads":finite_reads});
         let ir_hash = hex::encode(Sha256::digest(&ir));
         let state_hash = hex::encode(Sha256::digest(serde_json::to_vec(&state)?));
         let ir_changed = previous.as_ref().is_none_or(|(old_ir, _)| old_ir != &ir);
@@ -882,12 +1118,13 @@ fn prepare_block_il_with_snapshot(
             .as_ref()
             .is_none_or(|(_, old_state)| old_state != &state);
         let facts_changed = *facts != input_facts;
+        let proofs_changed = stack_proofs != previous_proofs || finite_reads != previous_finite;
         iteration_history.push(json!({"iteration":iteration,"ir_sha256":ir_hash,
             "state_sha256":state_hash,"ir_changed":ir_changed,"state_changed":state_changed,
-            "facts_changed":facts_changed,"worker_iterations":optimization["iterations"],
+            "facts_changed":facts_changed,"stack_proofs_changed":proofs_changed,"worker_iterations":optimization["iterations"],
             "worker_converged":true}));
         // 新发现的事实必须确实被下一轮消费，不能拿旧事实算出的 IR 宣称收敛。
-        if !ir_changed && !state_changed && !facts_changed {
+        if !ir_changed && !state_changed && !facts_changed && !proofs_changed {
             converged = true;
             stop_reason = "fixed-point";
             break;
@@ -900,6 +1137,8 @@ fn prepare_block_il_with_snapshot(
     }
     let progress = json!({"converged":converged,"stop_reason":stop_reason,
         "iteration_budget":SNAPSHOT_ITERATION_BUDGET,"iterations":iteration_history.len(),
+        "stack_address_proofs":stack_queries,
+        "read_address_proofs":read_queries,"finite_read_proofs":finite_reads,
         "history":iteration_history,"worker":optimization});
     fs::write(
         output.join("optimization.progress.json"),

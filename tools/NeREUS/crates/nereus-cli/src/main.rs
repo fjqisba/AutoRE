@@ -38,6 +38,12 @@ enum Commands {
         max_blocks: usize,
         #[arg(long)]
         resume_from: Option<PathBuf>,
+        /// 路径约束：指定首次 64 位 guest 读取为零，保留原读取和假设。
+        #[arg(long)]
+        assume_load64_zero: Vec<String>,
+        /// 路径约束：指定首次 64 位 guest 读取非零，不替换为代表值 1。
+        #[arg(long)]
+        assume_load64_nonzero: Vec<String>,
     },
     /// 沿可计算分支合并初始化逻辑，完成后输出 IR；未完成且目标不明则返回错误。
     #[command(alias = "init_vm_context")]
@@ -155,13 +161,23 @@ fn main() -> Result<()> {
             out,
             max_blocks,
             resume_from,
+            assume_load64_zero,
+            assume_load64_nonzero,
         } => {
             let _integrity = verify_manifest(&root)?;
             let entry = u64::from_str_radix(entry.trim_start_matches("0x"), 16)?;
             let session = VmSession::open(&root, &input, &out)?;
+            let mut conditions = Vec::new();
+            for (values, zero) in [(assume_load64_zero, true), (assume_load64_nonzero, false)] {
+                for address in values {
+                    let value = u64::from_str_radix(address.trim_start_matches("0x"), 16)?;
+                    conditions.push(json!({"address":format!("0x{value:x}"),"width":64,"occurrence":0,"zero":zero}));
+                }
+            }
             let options = FunctionAnalysisOptions {
                 max_blocks,
                 resume_from,
+                memory_path_conditions: conditions,
                 ..Default::default()
             };
             let context = session.analyze_vm_function(entry, &options)?;

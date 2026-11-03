@@ -4,9 +4,16 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/InstIterator.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Intrinsics.h>
+#include <llvm/Analysis/ValueTracking.h>
+#include <llvm/Support/SHA256.h>
 #include <llvm/Support/raw_ostream.h>
 #include <map>
 #include <sstream>
+#include <optional>
+#include <set>
 
 namespace {
 class BitVectorModel {
@@ -83,6 +90,162 @@ class BitVectorModel {
     return name;
   }
 };
+
+std::string Assumptions(llvm::Function &function,BitVectorModel &model) {
+  std::string result;
+  for(auto &instruction:llvm::instructions(function))if(auto *call=llvm::dyn_cast<llvm::CallInst>(&instruction))
+    if(call->getCalledFunction() && call->getCalledFunction()->getIntrinsicID()==llvm::Intrinsic::assume)
+      result+="(assert (= "+model.emit(call->getArgOperand(0))+" #b1))\n";
+  return result;
+}
+
+llvm::Value *EntryStack(llvm::Function &function) {
+  auto *metadata=function.getMetadata("nereus.rsp.layout");
+  auto *offset=metadata && metadata->getNumOperands()==1
+      ?llvm::mdconst::dyn_extract<llvm::ConstantInt>(metadata->getOperand(0)):nullptr;
+  if(!offset || function.size()!=1)return nullptr;
+  const auto &layout=function.getParent()->getDataLayout();
+  for(auto &instruction:llvm::instructions(function))if(auto *load=llvm::dyn_cast<llvm::LoadInst>(&instruction)) {
+    int64_t actual=0;
+    if(load->isSimple() && load->getType()->isIntegerTy(64)
+        && llvm::GetPointerBaseWithConstantOffset(load->getPointerOperand(),actual,layout)==function.getArg(0)
+        && uint64_t(actual)==offset->getZExtValue())return load;
+  }
+  return nullptr;
+}
+
+bool SimpleStack(llvm::Value *value,llvm::Value *stack) {
+  if(value==stack)return true;
+  auto *binary=llvm::dyn_cast<llvm::BinaryOperator>(value);
+  return binary && (binary->getOpcode()==llvm::Instruction::Add || binary->getOpcode()==llvm::Instruction::Sub)
+      && llvm::isa<llvm::ConstantInt>(binary->getOperand(1)) && SimpleStack(binary->getOperand(0),stack);
+}
+
+// 在 RSP=0 处求候选偏移只用于猜候选；随后必须证明所有 64 位 RSP 都等价。
+std::optional<llvm::APInt> EvaluateAtZeroImpl(llvm::Value *value,llvm::Value *stack,
+    std::map<llvm::Value*,std::optional<llvm::APInt>> &memo,unsigned budget=512) {
+  if(!budget || !value->getType()->isIntegerTy())return {};
+  if(memo.count(value))return memo[value];
+  if(memo.size()>=2048)return {};
+  memo[value]={};
+  auto evaluate=[&](llvm::Value *operand){return EvaluateAtZeroImpl(operand,stack,memo,budget-1);};
+  auto compute=[&]() ->std::optional<llvm::APInt> {
+  if(value==stack)return llvm::APInt(64,0);
+  if(auto *constant=llvm::dyn_cast<llvm::ConstantInt>(value))return constant->getValue();
+  if(auto *binary=llvm::dyn_cast<llvm::BinaryOperator>(value)) {
+    auto a=evaluate(binary->getOperand(0));if(!a)return {};
+    auto b=evaluate(binary->getOperand(1));
+    if(!a || !b)return {};
+    switch(binary->getOpcode()) {
+      case llvm::Instruction::Add:return *a+*b;case llvm::Instruction::Sub:return *a-*b;
+      case llvm::Instruction::Mul:return *a**b;case llvm::Instruction::And:return *a&*b;
+      case llvm::Instruction::Or:return *a|*b;case llvm::Instruction::Xor:return *a^*b;
+      case llvm::Instruction::Shl:if(b->uge(a->getBitWidth()))return {};return a->shl(b->getZExtValue());
+      case llvm::Instruction::LShr:if(b->uge(a->getBitWidth()))return {};return a->lshr(b->getZExtValue());
+      case llvm::Instruction::AShr:if(b->uge(a->getBitWidth()))return {};return a->ashr(b->getZExtValue());
+      default:return {};
+    }
+  }
+  if(auto *cast=llvm::dyn_cast<llvm::CastInst>(value)) {
+    auto source=evaluate(cast->getOperand(0));if(!source)return {};
+    const auto width=cast->getType()->getIntegerBitWidth();
+    switch(cast->getOpcode()) {
+      case llvm::Instruction::Trunc:return source->trunc(width);
+      case llvm::Instruction::ZExt:return source->zext(width);
+      case llvm::Instruction::SExt:return source->sext(width);
+      default:return {};
+    }
+  }
+  return {};
+  };
+  return memo[value]=compute();
+}
+std::optional<llvm::APInt> EvaluateAtZero(llvm::Value *value,llvm::Value *stack) {
+  std::map<llvm::Value*,std::optional<llvm::APInt>> memo;
+  return EvaluateAtZeroImpl(value,stack,memo);
+}
+
+struct StackCandidate {llvm::Value *value;uint64_t offset;std::string id,smt;};
+std::vector<StackCandidate> StackCandidates(llvm::Function &function,llvm::Value *stack) {
+  std::vector<StackCandidate> result;std::set<llvm::Value*> seen;
+  if(!stack)return result;
+  for(auto &instruction:llvm::instructions(function)) {
+    auto *call=llvm::dyn_cast<llvm::CallInst>(&instruction);
+    if(!call || !call->getCalledFunction() || call->arg_size()<2)continue;
+    auto name=call->getCalledFunction()->getName();
+    if(!name.starts_with("__remill_read_memory_") && !name.starts_with("__remill_write_memory_"))continue;
+    auto *value=call->getArgOperand(1);
+    if(!value->getType()->isIntegerTy(64) || llvm::isa<llvm::ConstantInt>(value)
+        || !seen.insert(value).second || SimpleStack(value,stack))continue;
+    auto offset=EvaluateAtZero(value,stack);
+    if(!offset || offset->getBitWidth()!=64)continue;
+    BitVectorModel model;model.memo[stack]="entry_rsp";
+    model.declarations="(declare-fun entry_rsp () (_ BitVec 64))\n";
+    auto target=model.emit(value);
+    if(target.empty() || !model.inputs.empty() || model.overapproximation)continue;
+    const auto smt="(set-logic QF_BV)\n"+model.declarations+model.definitions+
+        "(assert (distinct "+target+" (bvadd entry_rsp (_ bv"+std::to_string(offset->getZExtValue())+" 64))))\n(check-sat)\n";
+    const auto hash=llvm::SHA256::hash(llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(smt.data()),smt.size()));
+    result.push_back({value,offset->getZExtValue(),llvm::toHex(llvm::ArrayRef<uint8_t>(hash),true),smt});
+  }
+  return result;
+}
+}
+
+llvm::json::Array AnalyzeStackAddresses(llvm::Function &function) {
+  llvm::json::Array result;
+  for(auto &candidate:StackCandidates(function,EntryStack(function))) {
+    std::string text;llvm::raw_string_ostream stream(text);candidate.value->print(stream);
+    result.push_back(llvm::json::Object{{"id",candidate.id},{"offset",int64_t(candidate.offset)},
+        {"smt2",candidate.smt},{"expression",stream.str()}});
+  }
+  return result;
+}
+
+unsigned NormalizeStackAddresses(llvm::Function &function,const llvm::json::Array *proofs) {
+  if(!proofs || proofs->empty())return 0;
+  std::set<std::string> approved;
+  for(auto &proof:*proofs)if(auto id=proof.getAsString())approved.insert(id->str());
+  auto *stack=EntryStack(function);unsigned count=0;
+  for(auto &candidate:StackCandidates(function,stack)) {
+    if(!approved.count(candidate.id))continue;
+    auto *instruction=llvm::dyn_cast<llvm::Instruction>(candidate.value);if(!instruction)continue;
+    auto *normalized=llvm::IRBuilder<>(instruction).CreateAdd(stack,
+        llvm::ConstantInt::get(stack->getType(),candidate.offset),"stack.proven");
+    candidate.value->replaceAllUsesWith(normalized);++count;
+  }
+  return count;
+}
+
+std::string ReadAddressId(llvm::Value *address,unsigned width) {
+  BitVectorModel model;auto target=model.emit(address);
+  auto *instruction=llvm::dyn_cast<llvm::Instruction>(address);
+  const auto assumptions=instruction?Assumptions(*instruction->getFunction(),model):std::string();
+  const auto text=model.declarations+model.definitions+target+assumptions+std::to_string(width);
+  const auto hash=llvm::SHA256::hash(llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(text.data()),text.size()));
+  return llvm::toHex(llvm::ArrayRef<uint8_t>(hash),true);
+}
+
+llvm::json::Array AnalyzeReadAddresses(llvm::Function &function) {
+  llvm::json::Array result;std::set<std::string> seen;
+  for(auto &instruction:llvm::instructions(function)) {
+    auto *call=llvm::dyn_cast<llvm::CallInst>(&instruction);
+    if(!call || !call->getCalledFunction() || call->arg_size()!=2)continue;
+    auto name=call->getCalledFunction()->getName();
+    if(!name.consume_front("__remill_read_memory_"))continue;
+    unsigned width=0;if(name.getAsInteger(10,width) || (width!=8 && width!=16 && width!=32 && width!=64))continue;
+    auto *address=call->getArgOperand(1);
+    if(llvm::isa<llvm::ConstantInt>(address))continue;
+    const auto id=ReadAddressId(address,width);if(!seen.insert(id).second)continue;
+    BitVectorModel model;auto target=model.emit(address);if(target.empty())continue;
+    const auto assumptions=Assumptions(function,model);
+    result.push_back(llvm::json::Object{{"id",id},{"width_bits",int64_t(width)},
+        {"kind","symbolic-indirect"},{"target_width",64},{"overapproximation",model.overapproximation},
+        {"inputs",std::move(model.inputs)},
+        {"smt2","(set-option :produce-models true)\n(set-logic QF_BV)\n"+model.declarations+model.definitions+
+          "(define-fun target () (_ BitVec 64) "+target+")\n"+assumptions}});
+  }
+  return result;
 }
 
 llvm::json::Object AnalyzeBranch(llvm::Function &function) {
@@ -112,9 +275,10 @@ llvm::json::Object AnalyzeBranch(llvm::Function &function) {
     }
   }
   if(target.empty())return llvm::json::Object{{"kind","unresolved"},{"reason","unsupported-control-flow-shape"}};
+  const auto assumptions=Assumptions(function,model);
   const unsigned width=exits.front()->getArgOperand(1)->getType()->getIntegerBitWidth();
   const auto smt="(set-option :produce-models true)\n(set-logic QF_BV)\n"+model.declarations+model.definitions+
-      "(define-fun target () (_ BitVec "+std::to_string(width)+") "+target+")\n";
+      "(define-fun target () (_ BitVec "+std::to_string(width)+") "+target+")\n"+assumptions;
   auto *constant=exits.size()==1?llvm::dyn_cast<llvm::ConstantInt>(exits.front()->getArgOperand(1)):nullptr;
   llvm::json::Object result{{"kind",constant?"direct":"symbolic-indirect"},{"smt2",smt},
       {"target_width",int64_t(width)},{"inputs",std::move(model.inputs)},

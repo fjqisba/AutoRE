@@ -7,7 +7,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-fn solve(root: &Path, text: &str) -> Result<String> {
+pub(super) fn solve(root: &Path, text: &str) -> Result<String> {
     let config: Value = serde_json::from_slice(&fs::read(root.join("toolchains/local.json"))?)?;
     let program = config["z3"].as_str().context("Z3 未配置")?;
     let mut command = Command::new(program);

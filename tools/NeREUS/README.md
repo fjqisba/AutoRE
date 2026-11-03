@@ -88,6 +88,10 @@ worker 的 `validate-local` 操作将 reference/candidate IR 在隔离的模拟 
 
 ## 分支语义与增量图
 
+`analyze-vm-function` 可在初始化接口之外继续分析到调用者返回，支持 `--resume-from <入口产物目录>` 和 `--max-blocks`（默认 512）。检查点校验模块 SHA-256、入口及逐块原始字节；从累计链重新提升并重新验证快照和栈地址，不复用未经当前 IR 匹配的替换。未解析前沿可以在新增分析规则后重试。
+
+栈地址中的 MBA 可提交 64 位 SMT 反例查询，只有 UNSAT 才将其规范化为 `entry_rsp + offset`，证明与查询结果保存到逐轮 `stack-proofs/`；SAT/unknown 保留原表达式。函数终点要求原生 RET、调用者栈恢复、目标来自入口返回槽，并证明该槽在 memory token 链上未被未知别名或覆盖破坏。内部 CALL/RET 继续作为状态机转移。条件双目标仍保留两条边并返回前沿，尚未实现自动分叉遍历所有路径。见 [函数分析规则](docs/VM_FUNCTION_ANALYSIS.md)。
+
 初始化状态机现在会在只读文件快照前提下传播目标计算/Context 数据依赖，分类 `direct`、`conditional`、`computed-indirect` 与 `unresolved`。只有证明唯一目标才继续线性合并；双目标分支保存条件及两条边，返回 `VJCC_FRONTIER`，不选择其中一边。多路径状态队列与合流尚未实现。
 
 逐条指令使用 `(RIP, VIP)` 语义地址，VIP 来源及游标槽位关联有独立证据；尚未初始化时显示 `0x0`。入口输出目录新增 `semantic-graph.json`，逐轮目录保存 `branch.classification.json`、SMT 目标/排除查询、`image-facts.json`。实际能力、快照前提和证明边界见 [BRANCH_SEMANTICS.md](docs/BRANCH_SEMANTICS.md)。

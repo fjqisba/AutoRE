@@ -1,5 +1,5 @@
 use nereus_remill::Worker;
-use nereus_vm::VmSession;
+use nereus_vm::{FunctionAnalysisOptions, VmSession};
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
 
@@ -45,6 +45,189 @@ fn fixture(name: &str, pieces: &[(usize, Vec<u8>)]) -> (VmSession, PathBuf) {
         VmSession::open(&root(), &input, &output).unwrap(),
         output.join("180001000"),
     )
+}
+
+#[test]
+fn function_analysis_distinguishes_caller_ret_from_internal_ret() {
+    let entry = 0x180001000;
+    let mut code = Vec::new();
+    jump(&mut code, entry, entry + 0x200, true);
+    code.push(0xc3); // CALL 返回后再向真正调用者 RET。
+    let (session, directory) = fixture("function-caller-ret", &[(0, code), (0x200, vec![0xc3])]);
+    let context = session
+        .analyze_vm_function(entry, &FunctionAnalysisOptions::default())
+        .unwrap();
+    assert_eq!(context.blocks.len(), 3);
+    let report: Value =
+        serde_json::from_slice(&fs::read(directory.join("function-analysis.json")).unwrap())
+            .unwrap();
+    assert_eq!(report["status"], "returned");
+    assert_eq!(report["native_ret"], "0x180001005");
+    assert_eq!(report["return_proof"]["final_rsp_offset_from_entry"], 8);
+    assert_eq!(
+        report["return_proof"]["target_from_entry_return_slot"],
+        true
+    );
+    assert_eq!(report["initialization_complete"], false);
+}
+
+#[test]
+fn unknown_alias_write_cannot_be_mistaken_for_an_intact_caller_return_slot() {
+    let (session, directory) = fixture(
+        "return-slot-alias",
+        &[(0, hex::decode("488901c3").unwrap())],
+    );
+    let error = session
+        .analyze_vm_function(0x180001000, &FunctionAnalysisOptions::default())
+        .err()
+        .unwrap();
+    assert!(error.to_string().contains("BRANCH_TARGET_UNRESOLVED"));
+    let state: Value =
+        serde_json::from_slice(&fs::read(directory.join("state-machine.json")).unwrap()).unwrap();
+    let proof = &state["prepared"]["optimization"]["function_return"];
+    assert_eq!(proof["caller_stack_restored"], true);
+    assert_eq!(proof["target_from_entry_return_slot"], true);
+    assert_eq!(proof["entry_return_slot_intact"], false);
+    assert_eq!(proof["is_caller_return"], false);
+}
+
+#[test]
+fn checkpoint_resumes_verified_path_and_rejects_a_different_module() {
+    let entry = 0x180001000;
+    let mut first = Vec::new();
+    jump(&mut first, entry, entry + 0x200, false);
+    let (session, directory) = fixture("resume-to-ret", &[(0, first), (0x200, vec![0xc3])]);
+    let limited = FunctionAnalysisOptions {
+        max_blocks: 1,
+        ..Default::default()
+    };
+    let error = session.analyze_vm_function(entry, &limited).err().unwrap();
+    assert!(error.to_string().contains("INITIALIZATION_BUDGET_EXCEEDED"));
+    let options = FunctionAnalysisOptions {
+        resume_from: Some(directory.clone()),
+        ..Default::default()
+    };
+    let context = session.analyze_vm_function(entry, &options).unwrap();
+    assert_eq!(context.blocks.len(), 2);
+    let (other, _) = fixture("resume-other-image", &[(0, vec![0xc3])]);
+    let error = other.analyze_vm_function(entry, &options).err().unwrap();
+    assert!(error.to_string().contains("CHECKPOINT_MODULE_MISMATCH"));
+}
+
+#[test]
+fn incremental_prefix_matches_full_chain_state_memory_flags_and_return() {
+    let entry = 0x180001000;
+    let mut first = hex::decode("01c8").unwrap(); // add eax,ecx
+    jump(&mut first, entry, entry + 0x200, false);
+    let mut second = hex::decode("9c5a").unwrap(); // pushfq; pop rdx
+    jump(&mut second, entry + 0x200, entry + 0x400, false);
+    let (session, directory) = fixture(
+        "incremental-differential",
+        &[(0, first), (0x200, second), (0x400, vec![0xc3])],
+    );
+    assert!(session.init_vm_context(entry).is_err());
+    let reference = directory.join("full-chain-reference.bc");
+    fs::copy(directory.join("block.lifted.bc"), &reference).unwrap();
+    // 清除旧 prefix，确保函数模式第一轮从真实入口开始建立自己的 prefix。
+    for round in 0..3 {
+        let prefix = directory.join(format!("rounds/{round:02}/block.fixed-point.bc"));
+        if prefix.exists() {
+            fs::remove_file(prefix).unwrap();
+        }
+    }
+    let context = session
+        .analyze_vm_function(entry, &FunctionAnalysisOptions::default())
+        .unwrap();
+    assert_eq!(context.blocks.len(), 3);
+    let raw = fs::read_to_string(directory.join("rounds/02/block.raw.ll")).unwrap();
+    assert!(raw.contains("__nereus_prefix"));
+    let mut worker =
+        Worker::spawn(&root().join("toolchains/bin/nereus-remill-worker.exe")).unwrap();
+    let report = worker
+        .request(json!({"op":"validate-local","reference_bitcode":reference,
+        "optimized_bitcode":context.bitcode_path,"function_name":"nereus_bb_180001000","cases":64}))
+        .unwrap();
+    assert_eq!(report["ok"], true);
+}
+
+#[test]
+fn finite_image_read_preserves_conditional_dispatch_and_unknown_write_barriers() {
+    let entry = 0x180001000;
+    let table = [0x180001100_u64.to_le_bytes(), 0x180001180_u64.to_le_bytes()].concat();
+    // 两项只读表由输入 EAX 的低位选择；不能将某个 SAT 模型当成实际索引。
+    let code = hex::decode("83e001c1e00348b900180080010000004801c1488b11ffe2").unwrap();
+    let (session, directory) = fixture(
+        "finite-image-read",
+        &[(0, code.clone()), (0x800, table.clone())],
+    );
+    let error = session.init_vm_context(entry).err().unwrap();
+    assert!(error.to_string().contains("VJCC_FRONTIER"), "{error:#}");
+    let state: Value =
+        serde_json::from_slice(&fs::read(directory.join("state-machine.json")).unwrap()).unwrap();
+    assert_eq!(
+        state["prepared"]["branch"]["targets"],
+        json!(["0x180001100", "0x180001180"])
+    );
+    assert!(
+        state["prepared"]["optimization"]["finite_snapshot_reads_folded"]
+            .as_u64()
+            .unwrap()
+            > 0
+    );
+
+    let mut alias = hex::decode("48893e").unwrap(); // mov [rsi],rdi 可能覆盖任意表项。
+    alias.extend_from_slice(&code);
+    let (session, directory) = fixture("finite-read-alias", &[(0, alias), (0x800, table)]);
+    assert!(session.init_vm_context(entry).is_err());
+    let state: Value =
+        serde_json::from_slice(&fs::read(directory.join("state-machine.json")).unwrap()).unwrap();
+    assert_eq!(
+        state["prepared"]["optimization"]["finite_snapshot_reads_folded"],
+        0
+    );
+    assert_ne!(state["prepared"]["branch"]["kind"], "conditional");
+}
+
+#[test]
+fn explicit_zero_and_nonzero_paths_retain_symbolic_memory_and_reach_caller_ret() {
+    for zero in [true, false] {
+        let code = hex::decode(concat!(
+            "48c7c100500000488b014885c0",
+            "48b90011008001000000",
+            "48ba8011008001000000",
+            "480f45caffe1"
+        ))
+        .unwrap();
+        let (session, directory) = fixture(
+            if zero { "path-zero" } else { "path-nonzero" },
+            &[(0, code), (0x100, vec![0xc3]), (0x180, vec![0xc3])],
+        );
+        let condition = json!({"address":"0x5000","width":64,"occurrence":0,"zero":zero});
+        let options = FunctionAnalysisOptions {
+            memory_path_conditions: vec![condition.clone()],
+            ..Default::default()
+        };
+        let context = session.analyze_vm_function(0x180001000, &options).unwrap();
+        assert_eq!(
+            context.blocks[1].start_pc,
+            if zero { 0x180001100 } else { 0x180001180 }
+        );
+        let report: Value =
+            serde_json::from_slice(&fs::read(directory.join("function-analysis.json")).unwrap())
+                .unwrap();
+        assert_eq!(report["memory_path_conditions"], json!([condition]));
+        if !zero {
+            assert!(context.local_ir.contains("i64 noundef 20480"));
+            assert!(
+                context
+                    .local_ir
+                    .lines()
+                    .any(|line| line.contains("store i64 %") && line.contains("RAX")),
+                "{}",
+                context.local_ir
+            );
+        }
+    }
 }
 
 fn jump(bytes: &mut Vec<u8>, origin: u64, target: u64, call: bool) {

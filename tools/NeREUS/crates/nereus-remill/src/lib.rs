@@ -81,7 +81,13 @@ impl Worker {
         self.input.write_all(&encoded)?;
         self.input.write_all(b"\n")?;
         self.input.flush()?;
-        let bytes = match self.output.recv_timeout(Duration::from_secs(30)) {
+        // 完整 VM 路径的逐指令 trace 优化可能长于单块；仍保持显式超时和失败诊断。
+        let timeout = if request["op"] == "optimize-local" {
+            120
+        } else {
+            30
+        };
+        let bytes = match self.output.recv_timeout(Duration::from_secs(timeout)) {
             Ok(Ok(bytes)) => bytes,
             other => {
                 let exit_status = self.child.try_wait()?;

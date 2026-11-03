@@ -12,7 +12,8 @@ if len(owners) != 1:
     raise RuntimeError("用户指定的已打开数据库不唯一或不可用")
 code = r'''
 import ida_bytes, ida_funcs, ida_nalt, ida_segment, idautils, idc
-targets=[(0x18131E600,0x18131E631),(0x1810E56EE,0x1810E5900)]
+targets=[(0x18131E600,0x18131E631),(0x1810E56EE,0x1810E5900),
+         (0x18091B94E,0x18091B94F)]
 items=[]
 for start,end in targets:
     rows=[]; ea=start
