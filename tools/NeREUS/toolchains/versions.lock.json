@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "rust": "1.96.0",
+  "rust_target": "x86_64-pc-windows-msvc",
+  "llvm": "17.0.6",
+  "semantics_clang": "17.0.6",
+  "host_clang": "19.1.5",
+  "inkwell": "0.11.0",
+  "cmake": "4.2.1",
+  "ninja": "1.12.1",
+  "python": "3.10.5",
+  "z3": "4.16.0",
+  "remill": {
+    "repository": "https://github.com/lifting-bits/remill.git",
+    "revision": "56918a8c2554088e93389e97d292f4035286506c",
+    "patch": "toolchains/patches/remill-x86-windows.patch",
+    "cmake_option": "REMILL_X86_ONLY=ON",
+    "architectures": ["x86", "amd64", "x86_avx", "amd64_avx", "x86_avx512", "amd64_avx512"]
+  },
+  "xed_tag": "v2025.06.08",
+  "mbuild_tag": "v2024.11.04",
+  "dependency_revisions": {
+    "gflags": "52e94563eba1968783864942fedf6e87e3c611f4",
+    "glog": "7b134a5c82c0c0b5698bb6bf7a835b230c5638e4",
+    "googletest": "52eb8108c5bdec04579160ae17225d66034bd723",
+    "mbuild": "7c4497f41f576b43a80bb0f8d8452bbcfd58b6e2",
+    "xed": "dc6bdbe036515c7ef55d3b2d50bafc5232bfe534"
+  },
+  "crt": "static-multithreaded",
+  "protocol_version": 1
+}

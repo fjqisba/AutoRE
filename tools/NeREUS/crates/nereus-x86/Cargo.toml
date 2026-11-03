@@ -1,0 +1,14 @@
+[package]
+name = "nereus-x86"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+iced-x86.workspace = true
+nereus-core = { path = "../nereus-core" }
+
+[lints]
+workspace = true

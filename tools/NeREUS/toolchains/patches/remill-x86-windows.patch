@@ -1,0 +1,212 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e0695e7..0f095ab 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,6 +23,7 @@ include(FetchContent)
+ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/settings.cmake")
+ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils.cmake")
+ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/options.cmake")
++option(REMILL_X86_ONLY "Build only native XED x86/amd64 frontends" OFF)
+ 
+ if(REMILL_ENABLE_TESTING)
+   include(CTest)
+@@ -40,6 +41,10 @@ find_package(LLVM CONFIG REQUIRED)
+ if(LLVM_LINK_LLVM_DYLIB)
+   set(llvm_libs LLVM)
+ else()
++  if(REMILL_X86_ONLY)
++    llvm_map_components_to_libnames(llvm_libs support core irreader bitreader
++      bitwriter passes asmprinter interpreter mcjit x86info x86codegen x86asmparser)
++  else()
+   llvm_map_components_to_libnames(llvm_libs
+     support core irreader
+     bitreader bitwriter
+@@ -49,6 +54,7 @@ else()
+     interpreter mcjit
+     x86info x86codegen x86asmparser
+     sparccodegen sparcasmparser)
++  endif()
+ endif()
+ message(STATUS "LLVM Libraries: ${llvm_libs}")
+ 
+@@ -88,6 +94,7 @@ find_package(glog CONFIG REQUIRED)
+ set(GFLAGS_USE_TARGET_NAMESPACE ON)
+ find_package(gflags CONFIG REQUIRED)
+ 
++if(NOT REMILL_X86_ONLY)
+ option(REMILL_FETCH_SLEIGH "Fetch and build sleigh as part of remill" ON)
+ 
+ # Sleigh
+@@ -119,6 +126,8 @@ else()
+   find_package(sleigh CONFIG REQUIRED COMPONENTS Support Specs)
+ endif()
+ 
++set(REMILL_SLEIGH_LIBS sleigh::sla sleigh::decomp sleigh::support)
++endif()
+ # For Linux builds, group LLVM libraries into a single group
+ # that avoids frustrating library ordering issues.
+ if(UNIX AND NOT APPLE)
+@@ -143,6 +152,16 @@ option(REMILL_BUILD_SPARC32_RUNTIME "Build the Runtime for SPARC32. Turn this of
+ add_library(remill_settings INTERFACE)
+ 
+ target_compile_features(remill_settings INTERFACE cxx_std_17)
++if(REMILL_X86_ONLY)
++  target_compile_definitions(remill_settings INTERFACE REMILL_X86_ONLY=1)
++endif()
++if(NOT LLVM_ENABLE_RTTI)
++  if(MSVC)
++    target_compile_options(remill_settings INTERFACE /GR-)
++  else()
++    target_compile_options(remill_settings INTERFACE -fno-rtti)
++  endif()
++endif()
+ 
+ target_include_directories(remill_settings INTERFACE
+   $<BUILD_INTERFACE:${REMILL_INCLUDE_DIR}>
+@@ -225,6 +244,7 @@ target_compile_definitions(remill_settings INTERFACE
+   "REMILL_BUILD_SEMANTICS_DIR_PPC64_32ADDR=\"${REMILL_BUILD_SEMANTICS_DIR_PPC64_32ADDR}\""
+ )
+ 
++if(NOT REMILL_X86_ONLY)
+ if(REMILL_FETCH_SLEIGH)
+   if(SLEIGH_EXECUTABLE)
+     set(sleigh_compiler "${SLEIGH_EXECUTABLE}")
+@@ -254,14 +274,13 @@ else()
+   add_custom_target(sleigh_custom_specs)
+ endif()
+ 
++endif()
+ target_link_libraries(remill_settings INTERFACE
+   ${llvm_libs}
+   XED::XED
+   glog::glog
+   gflags::gflags
+-  sleigh::sla
+-  sleigh::decomp
+-  sleigh::support
++  ${REMILL_SLEIGH_LIBS}
+ )
+ 
+ add_subdirectory(lib/Arch)
+@@ -276,9 +295,7 @@ target_link_libraries(remill INTERFACE
+   XED::XED
+   glog::glog
+   gflags::gflags
+-  sleigh::sla
+-  sleigh::decomp
+-  sleigh::support
++  ${REMILL_SLEIGH_LIBS}
+   remill_bc
+   remill_os
+   remill_arch
+diff --git a/cmake/remillConfig.cmake.in b/cmake/remillConfig.cmake.in
+index 12f8c0f..59a8de5 100644
+--- a/cmake/remillConfig.cmake.in
++++ b/cmake/remillConfig.cmake.in
+@@ -24,7 +24,9 @@ find_dependency(XED)
+ find_dependency(glog)
+ find_dependency(gflags)
+ find_dependency(LLVM)
+-find_dependency(sleigh COMPONENTS Support Specs)
++if(NOT @REMILL_X86_ONLY@)
++  find_dependency(sleigh COMPONENTS Support Specs)
++endif()
+ 
+ # Exported Targets
+ include("${CMAKE_CURRENT_LIST_DIR}/remillTargets.cmake")
+diff --git a/include/remill/BC/Lifter.h b/include/remill/BC/Lifter.h
+index 434a9d4..6d3cd94 100644
+--- a/include/remill/BC/Lifter.h
++++ b/include/remill/BC/Lifter.h
+@@ -17,5 +17,7 @@
+ #pragma once
+ 
+ #include "InstructionLifter.h"
++#ifndef REMILL_X86_ONLY
+ #include "SleighLifter.h"
++#endif
+ #include "TraceLifter.h"
+diff --git a/lib/Arch/Arch.cpp b/lib/Arch/Arch.cpp
+index e61d646..019ac24 100644
+--- a/lib/Arch/Arch.cpp
++++ b/lib/Arch/Arch.cpp
+@@ -159,6 +159,20 @@ llvm::Triple Arch::BasicTriple(void) const {
+ 
+ auto Arch::GetArchByName(llvm::LLVMContext *context_, OSName os_name_,
+                          ArchName arch_name_) -> ArchPtr {
++#ifdef REMILL_X86_ONLY
++  switch (arch_name_) {
++    case kArchX86:
++    case kArchX86_AVX:
++    case kArchX86_AVX512:
++    case kArchAMD64:
++    case kArchAMD64_AVX:
++    case kArchAMD64_AVX512:
++      return GetX86(context_, os_name_, arch_name_);
++    default:
++      LOG(ERROR) << "Architecture unavailable in REMILL_X86_ONLY build";
++      return nullptr;
++  }
++#else
+   switch (arch_name_) {
+     case kArchInvalid:
+       LOG(FATAL) << "Unrecognized architecture.";
+@@ -250,6 +264,7 @@ auto Arch::GetArchByName(llvm::LLVMContext *context_, OSName os_name_,
+       return nullptr;
+     }
+   }
++#endif
+ }
+ 
+ auto Arch::Build(llvm::LLVMContext *context_, OSName os_name_,
+diff --git a/lib/Arch/CMakeLists.txt b/lib/Arch/CMakeLists.txt
+index 08d4d81..32278b5 100644
+--- a/lib/Arch/CMakeLists.txt
++++ b/lib/Arch/CMakeLists.txt
+@@ -26,14 +26,18 @@ add_library(remill_arch STATIC
+   Name.cpp
+ )
+ 
++if(NOT REMILL_X86_ONLY)
+ add_subdirectory(AArch32)
+ add_subdirectory(AArch64)
+ add_subdirectory(PPC)
+ add_subdirectory(SPARC32)
+ add_subdirectory(SPARC64)
+ add_subdirectory(Sleigh)
++endif()
+ add_subdirectory(X86)
+ 
++target_link_libraries(remill_arch PUBLIC remill_arch_x86)
++if(NOT REMILL_X86_ONLY)
+ target_link_libraries(remill_arch PUBLIC
+   remill_arch_aarch64
+   remill_arch_sleigh
+@@ -41,6 +45,7 @@ target_link_libraries(remill_arch PUBLIC
+   remill_arch_sparc64
+   remill_arch_x86
+ )
++endif()
+ 
+ if(REMILL_ENABLE_INSTALL_TARGET)
+   install(TARGETS remill_arch
+diff --git a/lib/BC/CMakeLists.txt b/lib/BC/CMakeLists.txt
+index 224d0e0..02af619 100644
+--- a/lib/BC/CMakeLists.txt
++++ b/lib/BC/CMakeLists.txt
+@@ -30,11 +30,13 @@ add_library(remill_bc STATIC
+   IntrinsicTable.cpp
+   Optimizer.cpp
+   TraceLifter.cpp
+-  SleighLifter.cpp
+-  PcodeCFG.cpp
+   Util.cpp
+ )
+ 
++if(NOT REMILL_X86_ONLY)
++  target_sources(remill_bc PRIVATE SleighLifter.cpp PcodeCFG.cpp)
++endif()
++
+ target_include_directories(remill_bc AFTER PRIVATE "${REMILL_SOURCE_DIR}")
+ 
+ target_link_libraries(remill_bc PUBLIC

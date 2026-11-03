@@ -1,0 +1,7 @@
+[build]
+target = "x86_64-pc-windows-msvc"
+target-dir = "temp_data/cargo"
+
+[target.x86_64-pc-windows-msvc]
+# 与选定的 LLVM libcmt 静态开发库使用相同 CRT，避免 /MT 与 /MD 混用。
+rustflags = ["-C", "target-feature=+crt-static"]
