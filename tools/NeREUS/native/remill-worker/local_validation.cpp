@@ -134,7 +134,7 @@ llvm::json::Object ValidateLocalBlock(const llvm::json::Object &request) {
   auto name = request.getString("function_name");
   const auto cases = request.getInteger("cases").value_or(256);
   auto error = [](llvm::StringRef reason) { return llvm::json::Object{
-      {"protocol_version", 1}, {"ok", false}, {"code", "VALIDATION_FAILED"}, {"message", reason}}; };
+      {"protocol_version", 1}, {"ok", false}, {"code", "VALIDATION_FAILED"}, {"message", reason.str()}}; };
   if (!raw || !optimized || !name || cases < 1 || cases > 4096) return error("invalid validation request");
   llvm::InitializeNativeTarget();
   llvm::InitializeNativeTargetAsmPrinter();

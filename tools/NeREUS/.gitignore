@@ -4,6 +4,7 @@
 /toolchains/remill-deps*/
 /toolchains/remill-install/
 /toolchains/bin/
+/toolchains/graphviz-*/
 /toolchains/local.json
 /toolchains/semantics.manifest.json
 /CMakeUserPresets.json

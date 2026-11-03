@@ -18,7 +18,7 @@ impl Architecture {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DecodedInstruction {
     pub pc: u64,
     pub length: usize,
@@ -26,14 +26,14 @@ pub struct DecodedInstruction {
     pub flow: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BlockInstruction {
     #[serde(flatten)]
     pub instruction: DecodedInstruction,
     pub bytes: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DecodedBlock {
     pub start_pc: u64,
     pub end_pc_exclusive: u64,

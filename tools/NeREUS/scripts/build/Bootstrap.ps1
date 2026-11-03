@@ -3,6 +3,10 @@ param([int]$Jobs = 6, [switch]$SkipNative, [switch]$SkipRust, [switch]$UseProxy)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Enter-Environment.ps1') -UseProxy:$UseProxy
 Set-Location $nereusRoot
+if(-not $nereusLocal.PSObject.Properties['graphviz_dot'] -or -not(Test-Path $nereusLocal.graphviz_dot)){
+    & (Join-Path $PSScriptRoot 'Install-Graphviz.ps1') -UseProxy:$UseProxy
+    $nereusLocal=Get-Content toolchains/local.json -Raw|ConvertFrom-Json
+}
 $lock = Get-Content toolchains/versions.lock.json -Raw | ConvertFrom-Json
 
 function Invoke-Checked([string]$Program, [string[]]$Arguments) {

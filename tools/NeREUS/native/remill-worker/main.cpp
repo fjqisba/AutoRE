@@ -18,12 +18,13 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <set>
 #include "local_optimizer.h"
 #include "local_validation.h"
 
 namespace {
 constexpr int64_t kProtocolVersion = 1;
-constexpr size_t kMaximumFrame = 1024 * 1024;
+constexpr size_t kMaximumFrame = 16 * 1024 * 1024;
 
 llvm::json::Object Error(const std::string &code, const std::string &message) {
   return llvm::json::Object{{"protocol_version", kProtocolVersion}, {"ok", false},
@@ -59,7 +60,7 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
   uint64_t pc = 0;
   if (address->getAsInteger(0, pc) || (*architecture == "x86" && pc > UINT32_MAX))
     return Error("INVALID_ADDRESS", "pc is outside the architecture address range");
-  const size_t max_hex_size = lift_block ? 32768 : 30;
+  const size_t max_hex_size = lift_block ? 262144 : 30;
   if (hex->empty() || hex->size() > max_hex_size || hex->size() % 2)
     return Error("INVALID_BYTES", "instruction/block bytes exceed limits or are invalid");
   std::string bytes;
@@ -87,13 +88,20 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
   // 寄存器临时变量名可能被 LLVM 消除，布局信息必须来自 Remill，而不是靠变量名猜偏移。
   function->setMetadata("nereus.rsp.layout", llvm::MDNode::get(context, {
       llvm::ConstantAsMetadata::get(llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), arch->RegisterByName(arch->StackPointerRegisterName())->offset))}));
+  llvm::SmallVector<llvm::Metadata *, 16> register_layout;
+  for (const auto *name : {"RAX", "RBX", "RCX", "RDX", "RSP", "RBP", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"}) {
+    if (const auto *reg = arch->RegisterByName(name))
+      register_layout.push_back(llvm::MDNode::get(context, {llvm::MDString::get(context, name),
+          llvm::ConstantAsMetadata::get(llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), reg->offset))}));
+  }
+  function->setMetadata("nereus.gpr.layout", llvm::MDNode::get(context, register_layout));
   auto block = &function->getEntryBlock();
   // NEXT_PC 是 Remill 指令提升的输入，必须在第一条指令前初始化，之后顺序传递。
   remill::StoreNextProgramCounter(block, llvm::ConstantInt::get(intrinsics.pc_type, pc));
   std::vector<size_t> lengths;
   if (lift_block) {
     const auto length_array = request.getArray("instruction_lengths");
-    if (!length_array || length_array->empty() || length_array->size() > 4096)
+    if (!length_array || length_array->empty() || length_array->size() > 32768)
       return Error("INVALID_REQUEST", "instruction_lengths required for lift-block");
     size_t total = 0;
     for (const auto &item : *length_array) {
@@ -108,22 +116,86 @@ llvm::json::Object Handle(const llvm::json::Object &request) {
     lengths.push_back(bytes.size());
   }
   llvm::json::Array instruction_map;
+  // Rust 已从上一轮优化 IR 计算边目标；非连续源地址保留为每条指令的地址映射。
+  const auto *source_pcs = request.getArray("instruction_pcs");
+  const auto *block_ends = request.getArray("block_end_indices");
+  if ((source_pcs || block_ends) && (!source_pcs || !block_ends || source_pcs->size() != lengths.size()))
+    return Error("INVALID_REQUEST", "instruction_pcs/block_end_indices mismatch");
+  std::set<size_t> boundaries;
+  if (block_ends) for (const auto &item : *block_ends) {
+    const auto end = item.getAsInteger();
+    if (!end || *end < 1 || uint64_t(*end) > lengths.size()) return Error("INVALID_REQUEST", "invalid block end");
+    boundaries.insert(size_t(*end));
+  }
+  if (block_ends && (boundaries.size() != block_ends->size() || !boundaries.count(lengths.size())))
+    return Error("INVALID_REQUEST", "chain boundaries must be unique and end at the last instruction");
   size_t offset = 0;
   remill::Instruction instruction;
+  const bool trace_vip=request.getBoolean("trace_instruction_vip").value_or(false);
+  const auto trace_seed_register=request.getString("trace_seed_register").value_or("");
+  llvm::Function *trace_marker=nullptr;
+  if(trace_vip){
+    auto *word=llvm::Type::getInt64Ty(context);
+    std::vector<llvm::Type*> arguments{word,word,arch->MemoryPointerType()};
+    for(unsigned i=0;i<16;++i)arguments.push_back(word);
+    trace_marker=llvm::Function::Create(llvm::FunctionType::get(llvm::Type::getVoidTy(context),arguments,false),
+        llvm::GlobalValue::ExternalLinkage,"__nereus_instruction_vip",module.get());
+    // 仅供分析的边界记录点：不访问 State，保留参数快照直到优化器读取。
+    trace_marker->setMemoryEffects(llvm::MemoryEffects::inaccessibleMemOnly());
+    trace_marker->addFnAttr(llvm::Attribute::NoUnwind);
+  }
   for (size_t index = 0; index < lengths.size(); ++index) {
     instruction.Reset();
+    uint64_t instruction_pc = pc + offset;
+    if (source_pcs) {
+      const auto address_text = (*source_pcs)[index].getAsString();
+      if (!address_text || address_text->getAsInteger(0, instruction_pc)) return Error("INVALID_ADDRESS", "invalid source PC");
+      if (index == 0 && instruction_pc != pc) return Error("INVALID_ADDRESS", "chain entry PC mismatch");
+      if (index && !boundaries.count(index)) {
+        const auto previous = (*source_pcs)[index - 1].getAsString();
+        uint64_t previous_pc = 0;
+        if (!previous || previous->getAsInteger(0, previous_pc) || instruction_pc != previous_pc + lengths[index - 1])
+          return Error("INVALID_BLOCK", "non-contiguous instructions inside native block");
+      }
+    }
+    if (instruction_pc > address_limit || lengths[index] > address_limit - instruction_pc)
+      return Error("INVALID_ADDRESS", "source instruction exceeds address space");
+    if(trace_marker){
+      auto lifter=arch->DefaultLifter(intrinsics);
+      auto *state=remill::NthArgument(function,remill::kStatePointerArgNum);
+      llvm::SmallVector<llvm::Value*,19> values{
+          llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),index),
+          llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),instruction_pc),
+          remill::LoadMemoryPointer(block,intrinsics)};
+      for(const auto *name:{"RAX","RBX","RCX","RDX","RSP","RBP","RSI","RDI","R8","R9","R10","R11","R12","R13","R14","R15"}){
+        if(!arch->RegisterByName(name))return Error("TRACE_ARCH_UNSUPPORTED","instruction VIP trace currently requires amd64");
+        // 只追踪由前一轮数据流确认的 seed 承载者和入口栈坐标。
+        // 记录全部暂存寄存器会让本应消除的 MBA 中间值变为可观察值，妨碍地址归一化。
+        values.push_back(trace_seed_register==name || llvm::StringRef(name)=="RSP"
+            ?lifter->LoadRegValue(block,state,name):llvm::ConstantInt::get(llvm::Type::getInt64Ty(context),0));
+      }
+      llvm::IRBuilder<>(block).CreateCall(trace_marker,values);
+    }
     const auto span = std::string_view(bytes).substr(offset, lengths[index]);
-    if (!arch->DecodeInstruction(pc + offset, span, instruction, arch->CreateInitialContext()))
+    if (!arch->DecodeInstruction(instruction_pc, span, instruction, arch->CreateInitialContext()))
       return Error("UNSUPPORTED_INSN", "Remill failed to decode instruction at 0x" + llvm::utohexstr(pc + offset));
     if (instruction.bytes.size() != lengths[index])
       return Error("DECODER_MISMATCH", "Remill and caller disagree on instruction length");
-    if (lift_block && index + 1 != lengths.size() && instruction.IsControlFlow())
+    if (lift_block && index + 1 != lengths.size() && instruction.IsControlFlow() && !boundaries.count(index + 1))
       return Error("INVALID_BLOCK", "control flow occurs before block end");
+    if (boundaries.count(index + 1) && index + 1 != lengths.size() &&
+        instruction.category != remill::Instruction::kCategoryDirectJump &&
+        instruction.category != remill::Instruction::kCategoryIndirectJump &&
+        instruction.category != remill::Instruction::kCategoryConditionalBranch &&
+        instruction.category != remill::Instruction::kCategoryDirectFunctionCall &&
+        instruction.category != remill::Instruction::kCategoryIndirectFunctionCall &&
+        instruction.category != remill::Instruction::kCategoryFunctionReturn)
+      return Error("INVALID_BLOCK", "unsupported internal chain terminator");
     const auto status = instruction.GetLifter()->LiftIntoBlock(instruction, block);
     if (status != remill::kLiftedInstruction)
       return Error("SEMANTICS_GAP", "Remill could not lift at 0x" + llvm::utohexstr(pc + offset));
     instruction_map.push_back(llvm::json::Object{
-        {"pc", "0x" + llvm::utohexstr(pc + offset, true)},
+        {"pc", "0x" + llvm::utohexstr(instruction_pc, true)},
         {"length", static_cast<int64_t>(lengths[index])},
         {"instruction", instruction.Serialize()}, {"isel", instruction.function}});
     offset += lengths[index];
@@ -219,7 +291,7 @@ int main(int argc, char **argv) {
   while (std::cin.get(byte)) {
     if (byte != '\n') {
       if (line.size() >= kMaximumFrame) {
-        llvm::outs() << llvm::json::Value(Error("FRAME_TOO_LARGE", "frame exceeds 1 MiB")) << '\n';
+        llvm::outs() << llvm::json::Value(Error("FRAME_TOO_LARGE", "frame exceeds 16 MiB")) << '\n';
         llvm::outs().flush();
         return 2;
       }

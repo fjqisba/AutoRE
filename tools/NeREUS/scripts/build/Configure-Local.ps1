@@ -6,6 +6,7 @@ param(
     [string]$Ninja,
     [string]$Python,
     [string]$Z3,
+    [string]$GraphvizDot,
     [string]$Proxy = 'http://127.0.0.1:7897'
 )
 $ErrorActionPreference = 'Stop'
@@ -24,6 +25,16 @@ $config = [ordered]@{
     schema_version = 1; visual_studio = $vsRoot; llvm_root = $LLVMRoot
     semantics_clang = $SemanticsClang; host_clang = $HostClang
     ninja = $Ninja; python = $Python; z3 = $Z3; proxy = $Proxy
+}
+$existingConfig=Join-Path $nereusRoot 'toolchains/local.json'
+if(-not $GraphvizDot -and (Test-Path $existingConfig)){
+    $previous=Get-Content $existingConfig -Raw|ConvertFrom-Json
+    if($previous.PSObject.Properties['graphviz_dot']){$GraphvizDot=$previous.graphviz_dot}
+}
+if(-not $GraphvizDot){$command=Get-Command dot -ErrorAction SilentlyContinue;if($command){$GraphvizDot=$command.Source}}
+if($GraphvizDot){
+    if(-not(Test-Path -LiteralPath $GraphvizDot)){throw 'GraphvizDot 路径无效'}
+    $config.graphviz_dot=$GraphvizDot
 }
 foreach ($name in @('llvm_root','semantics_clang','host_clang','ninja','python','z3')) {
     if (-not (Test-Path -LiteralPath $config[$name])) { throw "无效工具路径 $name : $($config[$name])" }

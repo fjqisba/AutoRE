@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(nereus_remill_worker LANGUAGES C CXX)
 
 find_package(remill CONFIG REQUIRED)
-add_executable(nereus-remill-worker main.cpp local_optimizer.cpp local_validation.cpp)
+add_executable(nereus-remill-worker main.cpp local_optimizer.cpp local_validation.cpp branch_analysis.cpp)
 target_compile_features(nereus-remill-worker PRIVATE cxx_std_17)
 target_link_libraries(nereus-remill-worker PRIVATE remill)
 target_include_directories(nereus-remill-worker SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})

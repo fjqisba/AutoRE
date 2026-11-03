@@ -44,7 +44,7 @@ fn initialize(name: &str, code: &str) -> VmContext {
     fs::write(&path, image).unwrap();
     VmSession::open(&root(), &path, &directory.join("contexts"))
         .unwrap()
-        .init_vm_context(0x180001000)
+        .lift_entry_block(0x180001000)
         .unwrap()
 }
 
@@ -143,4 +143,57 @@ fn popped_flags_still_leave_observable_stack_memory() {
         validate(&context, &context.bitcode_path).unwrap()["ok"],
         true
     );
+}
+
+#[test]
+fn local_snapshot_propagation_reaches_fixed_point_and_reports_budget_exhaustion() {
+    let first_slot = 0x180001100_u64;
+    let target = 0x180001180_u64;
+    let depth = 12_u64;
+    let mut code = vec![0x48, 0xb9];
+    code.extend_from_slice(&first_slot.to_le_bytes());
+    let mut facts = Vec::new();
+    for index in 0..depth {
+        // 地址加法须经 LLVM 折叠后才暴露下一层快照，全部事实一开始就已知。
+        code.extend_from_slice(&[0x48, 0x8b, 0x09, 0x48, 0x83, 0xc1, 0x08]);
+        let next = if index + 1 == depth {
+            target
+        } else {
+            first_slot + (index + 1) * 8
+        };
+        facts.push(json!({"address":format!("0x{:x}",first_slot+index*8),
+            "bytes":hex::encode((next-8).to_le_bytes())}));
+    }
+    code.extend_from_slice(&[0xff, 0xe1]);
+    let context = initialize("deep-local-snapshot", &hex::encode(code));
+    let mut worker =
+        Worker::spawn(&root().join("toolchains/bin/nereus-remill-worker.exe")).unwrap();
+    let mut request = json!({"op":"optimize-local",
+        "input_bitcode":context.output_dir.join("block.lifted.bc"),
+        "output_dir":context.output_dir,"function_name":"nereus_bb_180001000",
+        "image_facts":facts,"iteration_budget":8});
+    let limited = worker.request(request.clone()).unwrap();
+    assert_eq!(limited["converged"], false);
+    assert_eq!(limited["iteration_budget_exhausted"], true);
+    assert_eq!(limited["stop_reason"], "iteration-budget-exhausted");
+    request.as_object_mut().unwrap().remove("iteration_budget");
+    let stable = worker.request(request.clone()).unwrap();
+    assert_eq!(stable["converged"], true);
+    assert!(stable["iterations"].as_u64().unwrap() > 8);
+    assert_eq!(
+        stable["initialization"]["next_target"],
+        format!("0x{target:x}")
+    );
+    let last = stable["iteration_history"]
+        .as_array()
+        .unwrap()
+        .last()
+        .unwrap();
+    assert_eq!(last["ir_changed"], false);
+    assert_eq!(last["state_changed"], false);
+    // 最后一轮恰好达到稳定仍为成功，不能按 iterations >= budget 误报耗尽。
+    request["iteration_budget"] = stable["iterations"].clone();
+    let exact = worker.request(request).unwrap();
+    assert_eq!(exact["converged"], true);
+    assert_eq!(exact["iteration_budget_exhausted"], false);
 }

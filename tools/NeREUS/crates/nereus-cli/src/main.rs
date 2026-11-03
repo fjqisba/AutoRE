@@ -2,7 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 use nereus_core::Architecture;
 use nereus_remill::Worker;
-use nereus_vm::{VmSession, prepare_block_il};
+use nereus_vm::{FunctionAnalysisOptions, VmSession, prepare_block_il};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -26,7 +26,20 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 初始化 VM 入口上下文，仅提升首个基本块，stdout 直接输出局部 LLVM IR。
+    /// 沿可证明的 VM 状态机分析到调用者 RET；保留未解析或条件前沿。
+    AnalyzeVmFunction {
+        #[arg(long)]
+        input: PathBuf,
+        #[arg(long)]
+        entry: String,
+        #[arg(long, default_value = "temp_data/vm-function")]
+        out: PathBuf,
+        #[arg(long, default_value_t = 512)]
+        max_blocks: usize,
+        #[arg(long)]
+        resume_from: Option<PathBuf>,
+    },
+    /// 沿可计算分支合并初始化逻辑，完成后输出 IR；未完成且目标不明则返回错误。
     #[command(alias = "init_vm_context")]
     InitVmContext {
         #[arg(long)]
@@ -136,6 +149,25 @@ fn main() -> Result<()> {
     let root = find_root(cli.root)?;
     let worker_path = root.join("toolchains/bin/nereus-remill-worker.exe");
     let result = match cli.command {
+        Commands::AnalyzeVmFunction {
+            input,
+            entry,
+            out,
+            max_blocks,
+            resume_from,
+        } => {
+            let _integrity = verify_manifest(&root)?;
+            let entry = u64::from_str_radix(entry.trim_start_matches("0x"), 16)?;
+            let session = VmSession::open(&root, &input, &out)?;
+            let options = FunctionAnalysisOptions {
+                max_blocks,
+                resume_from,
+                ..Default::default()
+            };
+            let context = session.analyze_vm_function(entry, &options)?;
+            print!("{}", context.local_ir);
+            return Ok(());
+        }
         Commands::InitVmContext { input, entry, out } => {
             let _integrity = verify_manifest(&root)?;
             let entry = u64::from_str_radix(entry.trim_start_matches("0x"), 16)

@@ -330,6 +330,7 @@ dependencies = [
  "nereus-loader",
  "nereus-remill",
  "nereus-x86",
+ "serde",
  "serde_json",
  "sha2",
 ]

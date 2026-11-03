@@ -165,7 +165,7 @@ fn block_discovery_preserves_conditional_successors_and_call_boundary() {
 }
 
 #[test]
-fn init_vm_context_lifts_only_the_entry_block() {
+fn local_entry_block_lifts_only_one_native_block() {
     let root = project_root();
     let directory = root.join("temp_data/validation/init-vm-context");
     fs::create_dir_all(&directory).unwrap();
@@ -194,7 +194,7 @@ fn init_vm_context_lifts_only_the_entry_block() {
     let input = directory.join("entry.dll");
     fs::write(&input, pe).unwrap();
     let session = nereus_vm::VmSession::open(&root, &input, &directory.join("contexts")).unwrap();
-    let context = session.init_vm_context(0x180001000).unwrap();
+    let context = session.lift_entry_block(0x180001000).unwrap();
     assert_eq!(context.entry_va, 0x180001000);
     assert_eq!(context.first_block.instructions.len(), 2);
     assert_eq!(context.first_block.byte_length, 7);

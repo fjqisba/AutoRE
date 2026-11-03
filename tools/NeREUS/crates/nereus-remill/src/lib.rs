@@ -40,9 +40,9 @@ impl Worker {
             loop {
                 let mut bytes = Vec::new();
                 // 多读一个字节用来识别超限；后台读取允许主线程实施响应超时。
-                match Read::take(&mut reader, 1024 * 1024 + 1).read_until(b'\n', &mut bytes) {
+                match Read::take(&mut reader, 16 * 1024 * 1024 + 1).read_until(b'\n', &mut bytes) {
                     Ok(0) => break,
-                    Ok(length) if length <= 1024 * 1024 && bytes.last() == Some(&b'\n') => {
+                    Ok(length) if length <= 16 * 1024 * 1024 && bytes.last() == Some(&b'\n') => {
                         if sender.send(Ok(bytes)).is_err() {
                             break;
                         }
@@ -75,8 +75,8 @@ impl Worker {
         self.next_request += 1;
         request["request_id"] = request_id.into();
         let encoded = serde_json::to_vec(&request)?;
-        if encoded.len() + 1 > 1024 * 1024 {
-            bail!("INVALID_REQUEST: 请求超出 1 MiB 帧上限");
+        if encoded.len() + 1 > 16 * 1024 * 1024 {
+            bail!("INVALID_REQUEST: 请求超出 16 MiB 帧上限");
         }
         self.input.write_all(&encoded)?;
         self.input.write_all(b"\n")?;
@@ -84,8 +84,9 @@ impl Worker {
         let bytes = match self.output.recv_timeout(Duration::from_secs(30)) {
             Ok(Ok(bytes)) => bytes,
             other => {
+                let exit_status = self.child.try_wait()?;
                 let _ = self.child.kill();
-                bail!("WORKER_FAILED: 响应失败或超时: {other:?}");
+                bail!("WORKER_FAILED: 响应失败或超时: {other:?}; exit_status={exit_status:?}");
             }
         };
         let result: Value = serde_json::from_slice(&bytes)?;

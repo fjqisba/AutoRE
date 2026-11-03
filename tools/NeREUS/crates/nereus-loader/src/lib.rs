@@ -38,6 +38,31 @@ fn field<const N: usize>(bytes: &[u8], offset: usize) -> Result<[u8; N]> {
 }
 
 impl PeImage {
+    /// 读取首选基址下的只读磁盘快照。它是显式快照前提，不声称证明运行时从未改写。
+    pub fn readonly_snapshot(&self, bytes: &[u8], va: u64, width: usize) -> Result<Vec<u8>> {
+        let rva = va
+            .checked_sub(self.image_base)
+            .context("快照 VA 小于 ImageBase")?;
+        let end = rva.checked_add(width as u64).context("快照区间溢出")?;
+        let matches: Vec<_> = self
+            .sections
+            .iter()
+            .filter(|section| {
+                rva >= u64::from(section.virtual_address)
+                    && end <= u64::from(section.virtual_address) + u64::from(section.raw_size)
+            })
+            .collect();
+        if matches.len() != 1 || matches[0].characteristics & 0x80000000 != 0 {
+            bail!("读取不在唯一只读原始区域");
+        }
+        let section = matches[0];
+        let offset =
+            section.raw_pointer as usize + (rva - u64::from(section.virtual_address)) as usize;
+        Ok(bytes
+            .get(offset..offset.checked_add(width).context("文件区间溢出")?)
+            .context("快照数据被截断")?
+            .to_vec())
+    }
     pub fn parse(bytes: &[u8]) -> Result<Self> {
         if bytes.get(..2) != Some(b"MZ") {
             bail!("不是 MZ/PE 文件");
@@ -179,5 +204,24 @@ mod tests {
                 .is_err()
         );
         assert!(PeImage::parse(&bytes[..0x100]).is_err());
+    }
+
+    #[test]
+    fn snapshot_reads_reject_writable_or_unbacked_regions() {
+        let mut bytes = fixture();
+        bytes[0x210..0x214].copy_from_slice(&[1, 2, 3, 4]);
+        let image = PeImage::parse(&bytes).unwrap();
+        assert_eq!(
+            image.readonly_snapshot(&bytes, 0x180001010, 4).unwrap(),
+            [1, 2, 3, 4]
+        );
+        assert!(image.readonly_snapshot(&bytes, 0x1800011ff, 4).is_err());
+        bytes[0x188 + 36..0x188 + 40].copy_from_slice(&0xe0000020_u32.to_le_bytes());
+        assert!(
+            PeImage::parse(&bytes)
+                .unwrap()
+                .readonly_snapshot(&bytes, 0x180001010, 4)
+                .is_err()
+        );
     }
 }
