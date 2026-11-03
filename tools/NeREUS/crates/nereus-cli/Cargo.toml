@@ -14,9 +14,11 @@ anyhow.workspace = true
 clap.workspace = true
 hex.workspace = true
 nereus-core = { path = "../nereus-core" }
+nereus-loader = { path = "../nereus-loader" }
 nereus-llvm-support = { path = "../nereus-llvm-support" }
 nereus-remill = { path = "../nereus-remill" }
 nereus-x86 = { path = "../nereus-x86" }
+nereus-vm = { path = "../nereus-vm" }
 serde_json.workspace = true
 sha2.workspace = true
 

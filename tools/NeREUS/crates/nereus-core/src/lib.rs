@@ -25,3 +25,21 @@ pub struct DecodedInstruction {
     pub text: String,
     pub flow: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BlockInstruction {
+    #[serde(flatten)]
+    pub instruction: DecodedInstruction,
+    pub bytes: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DecodedBlock {
+    pub start_pc: u64,
+    pub end_pc_exclusive: u64,
+    pub byte_length: usize,
+    pub instructions: Vec<BlockInstruction>,
+    pub terminator: String,
+    pub direct_target: Option<u64>,
+    pub fallthrough: Option<u64>,
+}

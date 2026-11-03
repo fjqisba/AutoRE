@@ -278,7 +278,9 @@ dependencies = [
  "hex",
  "nereus-core",
  "nereus-llvm-support",
+ "nereus-loader",
  "nereus-remill",
+ "nereus-vm",
  "nereus-x86",
  "serde_json",
  "sha2",
@@ -301,12 +303,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "nereus-loader"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+]
+
+[[package]]
 name = "nereus-remill"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "nereus-core",
  "serde_json",
+]
+
+[[package]]
+name = "nereus-vm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hex",
+ "nereus-core",
+ "nereus-llvm-support",
+ "nereus-loader",
+ "nereus-remill",
+ "nereus-x86",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]

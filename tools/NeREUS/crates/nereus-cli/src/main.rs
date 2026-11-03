@@ -2,6 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 use nereus_core::Architecture;
 use nereus_remill::Worker;
+use nereus_vm::{VmSession, prepare_block_il};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
@@ -25,6 +26,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// 初始化 VM 入口上下文，仅提升首个基本块，stdout 直接输出局部 LLVM IR。
+    #[command(alias = "init_vm_context")]
+    InitVmContext {
+        #[arg(long)]
+        input: PathBuf,
+        #[arg(long)]
+        entry: String,
+        #[arg(long, default_value = "temp_data/vm-context")]
+        out: PathBuf,
+    },
     /// 检查实际 Rust、LLVM 和 Remill worker 调用链。
     Doctor,
     /// 提升单条原生指令并用独立 Rust LLVM 绑定验证 bitcode。
@@ -40,6 +51,19 @@ enum Commands {
     },
     VerifyBitcode {
         path: PathBuf,
+    },
+    /// 按 PE 首选 ImageBase 映射 VA，提取并提升一个原生基本块。
+    LiftPeBlock {
+        #[arg(long)]
+        input: PathBuf,
+        #[arg(long)]
+        va: String,
+        #[arg(long)]
+        out: PathBuf,
+        #[arg(long, default_value_t = 4096)]
+        max_bytes: usize,
+        #[arg(long, default_value_t = 512)]
+        max_instructions: usize,
     },
 }
 
@@ -112,6 +136,15 @@ fn main() -> Result<()> {
     let root = find_root(cli.root)?;
     let worker_path = root.join("toolchains/bin/nereus-remill-worker.exe");
     let result = match cli.command {
+        Commands::InitVmContext { input, entry, out } => {
+            let _integrity = verify_manifest(&root)?;
+            let entry = u64::from_str_radix(entry.trim_start_matches("0x"), 16)
+                .context("entry 必须是十六进制入口地址")?;
+            let session = VmSession::open(&root, &input, &out)?;
+            let context = session.init_vm_context(entry)?;
+            print!("{}", context.local_ir);
+            return Ok(());
+        }
         Commands::Doctor => {
             let llvm_ir = nereus_llvm_support::smoke_ir()?;
             let integrity = verify_manifest(&root)?;
@@ -170,6 +203,86 @@ fn main() -> Result<()> {
         }
         Commands::VerifyBitcode { path } => {
             serde_json::to_value(nereus_llvm_support::verify_bitcode(&path)?)?
+        }
+        Commands::LiftPeBlock {
+            input,
+            va,
+            out,
+            max_bytes,
+            max_instructions,
+        } => {
+            let _integrity = verify_manifest(&root)?;
+            if max_bytes == 0
+                || max_bytes > 16384
+                || max_instructions == 0
+                || max_instructions > 4096
+            {
+                bail!("预算要求：1..16384 字节，1..4096 指令");
+            }
+            let input = input.canonicalize()?;
+            let image_bytes = fs::read(&input)?;
+            let image_hash = hex::encode(Sha256::digest(&image_bytes));
+            let image = nereus_loader::PeImage::parse(&image_bytes)?;
+            let va = u64::from_str_radix(va.trim_start_matches("0x"), 16)
+                .context("va 必须是十六进制地址")?;
+            let mapping = image.map_executable_va(va, image_bytes.len())?;
+            let architecture = if image.bitness == 64 {
+                Architecture::Amd64
+            } else {
+                Architecture::X86
+            };
+            let arch_name = if image.bitness == 64 { "amd64" } else { "x86" };
+            let length = max_bytes.min(mapping.available_raw_bytes);
+            let window = &image_bytes[mapping.file_offset..mapping.file_offset + length];
+            let block = nereus_x86::decode_basic_block(architecture, va, window, max_instructions)?;
+            fs::create_dir_all(&out)?;
+            let out = out.canonicalize()?;
+            let block_bytes = &window[..block.byte_length];
+            fs::write(out.join("block.bin"), block_bytes)?;
+            let listing = block
+                .instructions
+                .iter()
+                .map(|item| {
+                    format!(
+                        "{:016X}  {:<30}  {}",
+                        item.instruction.pc, item.bytes, item.instruction.text
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            fs::write(
+                out.join("block.asm"),
+                format!(
+                    "; image_base={:#x}, rva={:#x}, file_offset={:#x}\n{listing}\n",
+                    image.image_base, mapping.rva, mapping.file_offset
+                ),
+            )?;
+            let lengths: Vec<_> = block
+                .instructions
+                .iter()
+                .map(|item| item.instruction.length)
+                .collect();
+            let mut worker = Worker::spawn(&worker_path)?;
+            let remill = worker.request(json!({
+                "op": "lift-block", "architecture": arch_name, "pc": format!("0x{va:x}"),
+                "bytes": hex::encode(block_bytes), "instruction_lengths": lengths,
+                "output_dir": out,
+                "semantics_dir": root.join("toolchains/remill-install/share/remill/17/semantics")
+            }))?;
+            let raw_verified = nereus_llvm_support::verify_bitcode(&out.join("block.raw.bc"))?;
+            let function_name = remill["function_name"]
+                .as_str()
+                .context("worker 未返回块函数名")?;
+            let prepared = prepare_block_il(&root, &out, function_name)?;
+            let result = json!({
+                "ok": true, "input": input, "input_sha256": image_hash,
+                "address_policy": "pe-preferred-image-base", "pe": image, "mapping": mapping,
+                "boundary_policy": "first control transfer, including call; entry supplied by user",
+                "block": block, "remill": remill, "raw_llvm": raw_verified, "prepared": prepared,
+                "source_executed": false, "function_recovered": false, "behavior_equivalence_verified": false
+            });
+            fs::write(out.join("result.json"), serde_json::to_vec_pretty(&result)?)?;
+            result
         }
     };
     println!("{}", serde_json::to_string_pretty::<Value>(&result)?);
